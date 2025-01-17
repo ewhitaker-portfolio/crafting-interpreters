@@ -4,51 +4,11 @@
 #include <stdlib.h>
 #include <string.h>
 
-struct DoublyLinkedNode {
-    struct DoublyLinkedNode* prev;
-    struct DoublyLinkedNode* next;
-    char* value;
-};
+#include "DoublyLinkedList.h"
 
-typedef struct DoublyLinkedNode DoublyLinkedNode;
-
-typedef struct {
-    DoublyLinkedNode* head;
-    DoublyLinkedNode* tail;
-    int size;
-} DoublyLinkedList;
-
-DoublyLinkedList* makeDoublyLinkedList();
-DoublyLinkedNode* makeDoublyLinkedNode(const char* value, int length);
-void freeDoublyLinkedList(DoublyLinkedList* list);
-void insertDoublyLinkedNode(DoublyLinkedList* list, const char* value);
-void insertDoublyLinkedNodeAt(DoublyLinkedList* list, int i, const char* value);
-int indexOfDoublyLinkedNode(DoublyLinkedList* list, const char* value);
-
-void traverseDoublyLinkedList(DoublyLinkedList* list, void (*callback)(DoublyLinkedNode* node));
-void printDoublyLinkedNode(DoublyLinkedNode* node) {
-    if (node->next == NULL) {
-        fprintf(stdout, "%s\n", node->value); 
-    } else {
-        fprintf(stdout, "%s <-> ", node->value); 
-    }
-}
-
-int main(void) {
-    DoublyLinkedList* list = makeDoublyLinkedList();
-    traverseDoublyLinkedList(list, printDoublyLinkedNode);
-
-    insertDoublyLinkedNode(list, "first value");
-    traverseDoublyLinkedList(list, printDoublyLinkedNode);
-    insertDoublyLinkedNode(list, "second value");
-    insertDoublyLinkedNode(list, "third value");
-    traverseDoublyLinkedList(list, printDoublyLinkedNode);
-
-    assert(indexOfDoublyLinkedNode(list, "second value") == 1);
-    assert(indexOfDoublyLinkedNode(list, "fourth value") == -1);
-
-    freeDoublyLinkedList(list);
-}
+#ifdef __cplusplus
+extern "C" {
+#endif
 
 DoublyLinkedList* makeDoublyLinkedList() {
     DoublyLinkedList* list = (DoublyLinkedList*) malloc(sizeof(DoublyLinkedList));
@@ -124,7 +84,7 @@ void insertDoublyLinkedNodeAt(DoublyLinkedList* list, int index, const char* val
     list->size = list->size + 1;
 }
 
-bool equals(const char* a, const char* b) {
+static bool equals(const char* a, const char* b) {
     assert(a != NULL && b != NULL);
 
     int len = strlen(a);
@@ -156,3 +116,7 @@ void traverseDoublyLinkedList(DoublyLinkedList* list, void (*callback)(DoublyLin
         curr = curr->next;
     }
 }
+
+#ifdef __cplusplus
+}
+#endif
