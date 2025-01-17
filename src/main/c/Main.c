@@ -1,3 +1,5 @@
+#include <assert.h>
+#include <stdbool.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
@@ -17,27 +19,33 @@ typedef struct {
 } DoublyLinkedList;
 
 DoublyLinkedList* makeDoublyLinkedList();
-DoublyLinkedNode* makeDoublyLinkedNode(char* value, int length);
+DoublyLinkedNode* makeDoublyLinkedNode(const char* value, int length);
 void freeDoublyLinkedList(DoublyLinkedList* list);
-void insertDoublyLinkedNode(DoublyLinkedList* list, char* value);
-void insertDoublyLinkedNodeAt(DoublyLinkedList* list, int i, char* value);
+void insertDoublyLinkedNode(DoublyLinkedList* list, const char* value);
+void insertDoublyLinkedNodeAt(DoublyLinkedList* list, int i, const char* value);
+int indexOfDoublyLinkedNode(DoublyLinkedList* list, const char* value);
 
-void traverseForward(DoublyLinkedList* list, void (*callback)(DoublyLinkedNode* node));
-void traverseBackward(DoublyLinkedList* list, void (*callback)(DoublyLinkedNode* node));
-
-void printNode(DoublyLinkedNode* node) {
-    fprintf(stdout, "%s\n", node->value); 
+void traverseDoublyLinkedList(DoublyLinkedList* list, void (*callback)(DoublyLinkedNode* node));
+void printDoublyLinkedNode(DoublyLinkedNode* node) {
+    if (node->next == NULL) {
+        fprintf(stdout, "%s\n", node->value); 
+    } else {
+        fprintf(stdout, "%s <-> ", node->value); 
+    }
 }
 
 int main(void) {
     DoublyLinkedList* list = makeDoublyLinkedList();
+    traverseDoublyLinkedList(list, printDoublyLinkedNode);
 
     insertDoublyLinkedNode(list, "first value");
+    traverseDoublyLinkedList(list, printDoublyLinkedNode);
     insertDoublyLinkedNode(list, "second value");
     insertDoublyLinkedNode(list, "third value");
+    traverseDoublyLinkedList(list, printDoublyLinkedNode);
 
-    traverseForward(list, printNode);
-    traverseBackward(list, printNode);
+    assert(indexOfDoublyLinkedNode(list, "second value") == 1);
+    assert(indexOfDoublyLinkedNode(list, "fourth value") == -1);
 
     freeDoublyLinkedList(list);
 }
@@ -50,7 +58,9 @@ DoublyLinkedList* makeDoublyLinkedList() {
     return list;
 }
 
-DoublyLinkedNode* makeDoublyLinkedNode(char* value, int length) {
+DoublyLinkedNode* makeDoublyLinkedNode(const char* value, int length) {
+    assert(value != NULL);
+
     DoublyLinkedNode* node = (DoublyLinkedNode*) malloc(sizeof(DoublyLinkedNode));
     node->prev = NULL;
     node->next = NULL;
@@ -60,6 +70,8 @@ DoublyLinkedNode* makeDoublyLinkedNode(char* value, int length) {
 }
 
 void freeDoublyLinkedList(DoublyLinkedList* list) {
+    assert(list != NULL);
+
     DoublyLinkedNode* curr = list->head;
     DoublyLinkedNode* prev = NULL;
     while (curr != NULL) {
@@ -70,58 +82,77 @@ void freeDoublyLinkedList(DoublyLinkedList* list) {
     }
 }
 
-void insertDoublyLinkedNode(DoublyLinkedList* list, char* value) {
-    insertDoublyLinkedNodeAt(list, list->size - 1, value);
+void insertDoublyLinkedNode(DoublyLinkedList* list, const char* value) {
+    insertDoublyLinkedNodeAt(list, list->size, value);
 }
 
-void insertDoublyLinkedNodeAt(DoublyLinkedList* list, int i, char* value) {
-    DoublyLinkedNode* curr = list->head;
+void insertDoublyLinkedNodeAt(DoublyLinkedList* list, int index, const char* value) {
+    assert(list != NULL && index >= 0 && index <= list->size && value != NULL);
+
     DoublyLinkedNode* node = makeDoublyLinkedNode(
         value, strlen(value)
     );
-    if (curr == NULL) {
-        list->head = node;
-        list->tail = node;
-        list->size++;
-        return;
-    }
 
-    if (i == list->size - 1) {
+    DoublyLinkedNode* curr;
+    if (index == list->size) {
         curr = list->tail;
-    } else {
-        int c = 0;
-        while (c++ != i) {
-            if (curr->next == NULL) {
-                break;
-            }
-            curr = curr->next;
+        if (curr == NULL) {
+            list->head = node;
+        } else {
+            curr->next = node;
         }
+        list->tail = node;
+        node->prev = curr;
+        node->next = NULL;
+    } else {
+        curr = list->tail;
+        for (int i = list->size; i > index; --i) {
+            curr = curr->prev;
+        }
+
+        DoublyLinkedNode* prev = curr->prev;
+        curr->prev = node;
+        if (prev == NULL) {
+            list->head = node;
+        } else {
+            prev->prev = node;
+        }
+        node->prev = prev;
+        node->next = curr;
     }
 
-    DoublyLinkedNode* next = curr->next;
-    curr->next = node;
-    if (next == NULL) {
-        list->tail = node;
-    } else {
-        next->prev = node;
-    }
-    node->prev = curr;
-    node->next = next;
     list->size = list->size + 1;
 }
 
-void traverseForward(DoublyLinkedList* list, void (*callback)(DoublyLinkedNode* node)) {
+bool equals(const char* a, const char* b) {
+    assert(a != NULL && b != NULL);
+
+    int len = strlen(a);
+    if (len != strlen(b)) {
+        return false;
+    }
+    return strncmp(a, b, len) == 0;
+}
+
+int indexOfDoublyLinkedNode(DoublyLinkedList* list, const char* value) {
+    assert(list != NULL && value != NULL);
+
+    DoublyLinkedNode* curr = list->head;
+    int i = 0;
+    while (curr != NULL && i < list->size) {
+        if (equals(curr->value, value)) {
+            break;
+        }
+        i = i + 1;
+        curr = curr->next;
+    }
+    return curr == NULL ? -1 : i;
+}
+
+void traverseDoublyLinkedList(DoublyLinkedList* list, void (*callback)(DoublyLinkedNode* node)) {
     DoublyLinkedNode* curr = list->head;
     while (curr != NULL) {
         callback(curr);
         curr = curr->next;
-    }
-}
-
-void traverseBackward(DoublyLinkedList* list, void (*callback)(DoublyLinkedNode* node)) {
-    DoublyLinkedNode* curr = list->tail;
-    while (curr != NULL) {
-        callback(curr);
-        curr = curr->prev;
     }
 }
