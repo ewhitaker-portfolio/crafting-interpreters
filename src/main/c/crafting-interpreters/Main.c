@@ -28,6 +28,18 @@ int main(void) {
     assert(indexOfDoublyLinkedNode(list, "second value") == 1);
     assert(indexOfDoublyLinkedNode(list, "fourth value") == -1);
 
+    assert(removeDoublyLinkedNode(list, "second value") != NULL);
+    traverseDoublyLinkedList(list, printDoublyLinkedNode);
+    assert(removeDoublyLinkedNode(list, "first value") != NULL);
+    assert(removeDoublyLinkedNode(list, "fifth value") == NULL);
+    traverseDoublyLinkedList(list, printDoublyLinkedNode);
+
+    insertDoublyLinkedNode(list, "fourth value");
+    insertDoublyLinkedNode(list, "fifth value");
+    traverseDoublyLinkedList(list, printDoublyLinkedNode);
+    assert(removeDoublyLinkedNode(list, "fifth value") != NULL);
+    traverseDoublyLinkedList(list, printDoublyLinkedNode);
+
     freeDoublyLinkedList(list);
 }
 

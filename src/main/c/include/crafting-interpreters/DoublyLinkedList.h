@@ -8,7 +8,8 @@ extern "C" {
 struct DoublyLinkedNode {
     struct DoublyLinkedNode* prev;
     struct DoublyLinkedNode* next;
-    char* value;
+
+    const char* value;
 };
 
 typedef struct DoublyLinkedNode DoublyLinkedNode;
@@ -16,6 +17,7 @@ typedef struct DoublyLinkedNode DoublyLinkedNode;
 typedef struct {
     DoublyLinkedNode* head;
     DoublyLinkedNode* tail;
+
     int size;
 } DoublyLinkedList;
 
@@ -24,9 +26,12 @@ DoublyLinkedNode* makeDoublyLinkedNode(const char* value, int length);
 void freeDoublyLinkedList(DoublyLinkedList* list);
 
 void insertDoublyLinkedNode(DoublyLinkedList* list, const char* value);
-void insertDoublyLinkedNodeAt(DoublyLinkedList* list, int i, const char* value);
+void insertDoublyLinkedNodeAt(DoublyLinkedList* list, int index, const char* value);
 
 int indexOfDoublyLinkedNode(DoublyLinkedList* list, const char* value);
+
+const char* removeDoublyLinkedNode(DoublyLinkedList* list, const char* value);
+const char* removeDoublyLinkedNodeAt(DoublyLinkedList* list, int index);
 
 void traverseDoublyLinkedList(DoublyLinkedList* list, void (*callback)(DoublyLinkedNode* node));
 

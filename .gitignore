@@ -1,3 +1,7 @@
+# Clangd #
+.cache/
+compile_commands.json
+
 # Maven #
 target/
 !**/src/main/**/target/
