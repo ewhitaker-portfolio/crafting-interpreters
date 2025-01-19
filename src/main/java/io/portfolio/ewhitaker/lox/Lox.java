@@ -39,8 +39,10 @@ public class Lox {
     }
 
     public static void run(String source) {
-        Lexer lexer = new Lexer(source);
-        List<Token> tokens = lexer.scanTokens();
+        Lexer lexer = new Lexer(source, (int offset, String message) -> {
+            report(source, offset, message);
+        });
+        List<Token> tokens = lexer.tokens();
 
         // For now, just print the tokens.
         for (Token token : tokens) {
@@ -48,12 +50,34 @@ public class Lox {
         }
     }
 
-    public static void error(int line, String message) {
-        report(line, "", message);
+    public static void report(String source, int offset, String message) {
+        System.err.println("Error: " + message);
+        System.err.println(format(source, offset));
+
+        hadError = true;
     }
 
-    public static void report(int line, String where, String message) {
-        System.err.println("[line " + line + "] Error" + where + ": " + message);
-        hadError = true;
+    public static String format(String source, int offset) {
+        int nlNum = 1;
+        int nlPos = 0;
+        for (int i = 0; i < offset; ++i) {
+            if (source.charAt(i) == '\n') {
+                ++nlNum;
+                nlPos = i;
+            }
+        }
+
+        StringBuilder line = new StringBuilder();
+        for (int i = nlPos; i < source.length(); ++i) {
+            char c = source.charAt(i);
+            if (c == '\n') {
+                break;
+            }
+            line.append(c);
+        }
+
+        final String prefix = nlNum + " | ";
+        final String spaces = " ".repeat((offset - nlPos) + prefix.length());
+        return '\t' + prefix + line + '\n' + '\t' + spaces + "^-- Here.";
     }
 }

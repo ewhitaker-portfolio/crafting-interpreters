@@ -1,8 +1,8 @@
 package io.portfolio.ewhitaker.lox;
 
-public record Token(TokenType type, String lexeme, Object literal, int line) {
+public record Token(TokenType type, String lexeme, int offset) {
     @Override
     public String toString() {
-        return "Token" + "{" + "type=" + this.type + "lexeme=" + this.lexeme + "literal=" + this.literal + "}";
+        return "Token" + "{" + "type=" + this.type + ",lexeme=" + this.lexeme + ",offset=" + this.offset + "}";
     }
 }
