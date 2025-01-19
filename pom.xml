@@ -28,7 +28,7 @@
                 <configuration>
                     <archive>
                         <manifest>
-                            <mainClass>io.portfolio.ewhitaker.Main</mainClass>
+                            <mainClass>io.portfolio.ewhitaker.lox.Printer</mainClass>
                         </manifest>
                     </archive>
                 </configuration>
