@@ -88,10 +88,9 @@ public class Lexer {
                         yield this.number();
                     } else if (isAlpha(c)) {
                         yield this.identifier();
-                    } else {
-                        this.error("Unexpected character.");
-                        yield null;
                     }
+
+                    yield this.error("Unexpected character.");
                 }
             };
 
@@ -135,8 +134,7 @@ public class Lexer {
         }
 
         if (this.eof()) {
-            this.error("Unterminated string.");
-            return null;
+            return this.error("Unterminated string.");
         }
 
         // The closing ".
@@ -170,10 +168,11 @@ public class Lexer {
         return this.current >= this.source.length();
     }
 
-    public void error(String message) {
+    public Token error(String message) {
         if (this.handler != null) {
             this.handler.report(this.start, message);
         }
+        return this.emit(TokenType.ILLEGAL);
     }
 
     public Token emit(TokenType type) {

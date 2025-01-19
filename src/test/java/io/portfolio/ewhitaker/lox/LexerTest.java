@@ -147,8 +147,16 @@ public class LexerTest {
                 /* #10 */new Test("var unexpected %", new Token[] {
                         new Token(TokenType.VAR, "var", 0),
                         new Token(TokenType.IDENTIFIER, "unexpected", 4),
+                        new Token(TokenType.ILLEGAL, "%", 15),
                         new Token(TokenType.EOF, "", 16),
                 }, "Unexpected character."),
+                /* #10 */new Test("var unterminated = \"missing", new Token[] {
+                        new Token(TokenType.VAR, "var", 0),
+                        new Token(TokenType.IDENTIFIER, "unterminated", 4),
+                        new Token(TokenType.EQUAL, "=", 17),
+                        new Token(TokenType.ILLEGAL, "\"missing", 19),
+                        new Token(TokenType.EOF, "", 27),
+                }, "Unterminated string."),
         };
 
         for (int i = 0; i < tests.length; ++i) {

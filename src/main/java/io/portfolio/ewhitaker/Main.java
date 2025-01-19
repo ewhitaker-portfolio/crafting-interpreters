@@ -7,7 +7,6 @@ import io.portfolio.ewhitaker.lox.Lox;
 //TODO: do-while loop, foreach loop
 //TODO: implement prototypes instead of classes, object literals
 //TODO: new keyword for object instantiation
-//TODO: better error handling, single error per line
 
 public interface Main {
     static int EXIT_SUCCESS = 0;
