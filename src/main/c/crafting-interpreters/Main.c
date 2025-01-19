@@ -1,5 +1,6 @@
 #include <assert.h>
 #include <stdio.h>
+#include <stdlib.h>
 
 #include "DoublyLinkedList.h"
 
@@ -16,6 +17,9 @@ void printDoublyLinkedNode(DoublyLinkedNode* node) {
 }
 
 int main(void) {
+    setbuf(stdout, NULL);
+    setbuf(stderr, NULL);
+
     DoublyLinkedList* list = makeDoublyLinkedList();
     traverseDoublyLinkedList(list, printDoublyLinkedNode);
 
@@ -41,6 +45,8 @@ int main(void) {
     traverseDoublyLinkedList(list, printDoublyLinkedNode);
 
     freeDoublyLinkedList(list);
+
+    return EXIT_SUCCESS;
 }
 
 #ifdef __cplusplus
