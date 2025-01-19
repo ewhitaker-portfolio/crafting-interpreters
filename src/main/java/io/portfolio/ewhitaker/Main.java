@@ -10,6 +10,7 @@ import io.portfolio.ewhitaker.lox.Lox;
 //TODO: better error handling, single error per line
 
 public interface Main {
+    static int EXIT_SUCCESS = 0;
     static int EXIT_USAGE_FAILURE = 64;
     static int EXIT_INCORRECT_DATA_FAILURE = 65;
 
@@ -17,10 +18,8 @@ public interface Main {
         if (args.length > 1) {
             System.out.println("Usage: java -jar jlox.jar [script]");
             System.exit(EXIT_USAGE_FAILURE);
-        } else if (args.length == 1) {
-            Lox.runFile(args[0]);
-        } else {
-            Lox.runPrompt();
         }
+
+        System.exit(Lox.start(args));
     }
 }

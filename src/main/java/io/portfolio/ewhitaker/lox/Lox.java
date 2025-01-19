@@ -13,17 +13,27 @@ import io.portfolio.ewhitaker.Main;
 public class Lox {
     public static boolean hadError = false;
 
-    public static void runFile(String path) throws IOException {
+    public static int start(String[] args) throws IOException {
+        if (args.length == 1) {
+            return runFile(args[0]);
+        }
+
+        return runPrompt();
+    }
+
+    public static int runFile(String path) throws IOException {
         byte[] bytes = Files.readAllBytes(Paths.get(path));
         run(new String(bytes, Charset.defaultCharset()));
 
         // Indicate an error in the exit code.
         if (hadError) {
-            System.exit(Main.EXIT_INCORRECT_DATA_FAILURE);
+            return Main.EXIT_INCORRECT_DATA_FAILURE;
         }
+
+        return Main.EXIT_SUCCESS;
     }
 
-    public static void runPrompt() throws IOException {
+    public static int runPrompt() throws IOException {
         InputStreamReader input = new InputStreamReader(System.in);
         BufferedReader reader = new BufferedReader(input);
 
@@ -36,6 +46,8 @@ public class Lox {
             run(line);
             hadError = false;
         }
+
+        return Main.EXIT_SUCCESS;
     }
 
     public static void run(String source) {
