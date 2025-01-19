@@ -76,7 +76,18 @@ public class Lexer {
                         }
                         yield null;
                     } else if (this.match('*')) {
-                        yield null; // TODO:
+                        int stack = 1;
+                        while (stack != 0 && !this.eof()) {
+                            if (this.peek(0) == '/' && this.peek(1) == '*') {
+                                this.advance();
+                                ++stack;
+                            } else if (this.peek(0) == '*' && this.peek(1) == '/') {
+                                this.advance();
+                                --stack;
+                            }
+                            this.advance();
+                        }
+                        yield null;
                     } else {
                         yield this.emit(TokenType.SLASH);
                     }

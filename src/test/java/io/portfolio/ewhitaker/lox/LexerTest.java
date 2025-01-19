@@ -141,10 +141,7 @@ public class LexerTest {
                 /* #8 */new Test("", new Token[] {
                         new Token(TokenType.EOF, "", 0),
                 }, ""),
-                /* #9 */new Test("// single-line comment", new Token[] {
-                        new Token(TokenType.EOF, "", 22),
-                }, ""),
-                /* #10 */new Test("var unexpected %", new Token[] {
+                /* #9 */new Test("var unexpected %", new Token[] {
                         new Token(TokenType.VAR, "var", 0),
                         new Token(TokenType.IDENTIFIER, "unexpected", 4),
                         new Token(TokenType.ILLEGAL, "%", 15),
@@ -157,6 +154,40 @@ public class LexerTest {
                         new Token(TokenType.ILLEGAL, "\"missing", 19),
                         new Token(TokenType.EOF, "", 27),
                 }, "Unterminated string."),
+                /* #11 */new Test("""
+                        // single-line comment
+                        fun documented() {
+                            return nil;
+                        }""", new Token[] {
+                        new Token(TokenType.FUN, "fun", 23),
+                        new Token(TokenType.IDENTIFIER, "documented", 27),
+                        new Token(TokenType.LEFT_PAREN, "(", 37),
+                        new Token(TokenType.RIGHT_PAREN, ")", 38),
+                        new Token(TokenType.LEFT_BRACE, "{", 40),
+                        new Token(TokenType.RETURN, "return", 46),
+                        new Token(TokenType.NIL, "nil", 53),
+                        new Token(TokenType.SEMICOLON, ";", 56),
+                        new Token(TokenType.RIGHT_BRACE, "}", 58),
+                        new Token(TokenType.EOF, "", 59),
+                }, ""),
+                /* #12 */new Test("""
+                        /*
+                         * /* nested multi-line comment */
+                         */
+                        fun documented() {
+                            return nil;
+                        }""", new Token[] {
+                        new Token(TokenType.FUN, "fun", 42),
+                        new Token(TokenType.IDENTIFIER, "documented", 46),
+                        new Token(TokenType.LEFT_PAREN, "(", 56),
+                        new Token(TokenType.RIGHT_PAREN, ")", 57),
+                        new Token(TokenType.LEFT_BRACE, "{", 59),
+                        new Token(TokenType.RETURN, "return", 65),
+                        new Token(TokenType.NIL, "nil", 72),
+                        new Token(TokenType.SEMICOLON, ";", 75),
+                        new Token(TokenType.RIGHT_BRACE, "}", 77),
+                        new Token(TokenType.EOF, "", 78),
+                }, ""),
         };
 
         for (int i = 0; i < tests.length; ++i) {
