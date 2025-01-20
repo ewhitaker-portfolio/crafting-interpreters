@@ -28,7 +28,7 @@
                 <configuration>
                     <archive>
                         <manifest>
-                            <mainClass>io.portfolio.ewhitaker.lox.Printer</mainClass>
+                            <mainClass>io.portfolio.ewhitaker.lox.print.RPNPrinter</mainClass>
                         </manifest>
                     </archive>
                 </configuration>

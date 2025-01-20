@@ -1,9 +1,8 @@
-package io.portfolio.ewhitaker.lox;
+package io.portfolio.ewhitaker.lox.print;
 
-import io.portfolio.ewhitaker.lox.Expr.Binary;
-import io.portfolio.ewhitaker.lox.Expr.Grouping;
-import io.portfolio.ewhitaker.lox.Expr.Literal;
-import io.portfolio.ewhitaker.lox.Expr.Unary;
+import io.portfolio.ewhitaker.lox.Expr;
+import io.portfolio.ewhitaker.lox.Token;
+import io.portfolio.ewhitaker.lox.TokenType;
 
 public class Printer implements Expr.Visitor<String> {
 
@@ -12,17 +11,17 @@ public class Printer implements Expr.Visitor<String> {
     }
 
     @Override
-    public String visitBinaryExpr(Binary expr) {
+    public String visitBinaryExpr(Expr.Binary expr) {
         return parenthesize(expr.operator().lexeme(), expr.left(), expr.right());
     }
 
     @Override
-    public String visitGroupingExpr(Grouping expr) {
+    public String visitGroupingExpr(Expr.Grouping expr) {
         return parenthesize("group", expr.expression());
     }
 
     @Override
-    public String visitLiteralExpr(Literal expr) {
+    public String visitLiteralExpr(Expr.Literal expr) {
         if (expr.value() == null) {
             return "nil";
         }
@@ -30,7 +29,7 @@ public class Printer implements Expr.Visitor<String> {
     }
 
     @Override
-    public String visitUnaryExpr(Unary expr) {
+    public String visitUnaryExpr(Expr.Unary expr) {
         return parenthesize(expr.operator().lexeme(), expr.right());
     }
 
@@ -55,7 +54,6 @@ public class Printer implements Expr.Visitor<String> {
                 new Token(TokenType.STAR, "*", 0),
                 new Expr.Grouping(
                         new Expr.Literal(45.67)));
-
         System.out.println(new Printer().print(expression));
     }
 }
