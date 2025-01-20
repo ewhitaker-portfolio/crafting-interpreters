@@ -33,9 +33,13 @@ public class Lexer {
     public int start = 0;
     public int current = 0;
 
+    public List<Integer> lines = new ArrayList<>();
+
     public Lexer(String source, ErrorHandler handler) {
         this.source = source;
         this.handler = handler;
+
+        this.lines.add(0);
     }
 
     public List<Token> tokens() {
@@ -64,10 +68,34 @@ public class Lexer {
                 case '+' -> this.emit(TokenType.PLUS);
                 case ';' -> this.emit(TokenType.SEMICOLON);
                 case '*' -> this.emit(TokenType.STAR);
-                case '!' -> this.emit(this.match('=') ? TokenType.BANG_EQUAL : TokenType.BANG);
-                case '=' -> this.emit(this.match('=') ? TokenType.EQUAL_EQUAL : TokenType.EQUAL);
-                case '<' -> this.emit(this.match('=') ? TokenType.LESS_EQUAL : TokenType.LESS);
-                case '>' -> this.emit(this.match('=') ? TokenType.GREATER_EQUAL : TokenType.GREATER);
+                case '!' -> {
+                    if (this.match('=')) {
+                        yield this.emit(TokenType.BANG_EQUAL);
+                    } else {
+                        yield this.emit(TokenType.BANG);
+                    }
+                }
+                case '=' -> {
+                    if (this.match('=')) {
+                        yield this.emit(TokenType.EQUAL_EQUAL);
+                    } else {
+                        yield this.emit(TokenType.EQUAL);
+                    }
+                }
+                case '<' -> {
+                    if (this.match('=')) {
+                        yield this.emit(TokenType.LESS_EQUAL);
+                    } else {
+                        yield this.emit(TokenType.LESS);
+                    }
+                }
+                case '>' -> {
+                    if (this.match('=')) {
+                        yield this.emit(TokenType.GREATER_EQUAL);
+                    } else {
+                        yield this.emit(TokenType.GREATER);
+                    }
+                }
                 case '/' -> {
                     if (this.match('/')) {
                         // A comment goes until the end of the line.
@@ -85,6 +113,9 @@ public class Lexer {
                                 this.advance();
                                 --stack;
                             }
+                            if (this.peek(0) == '\n') {
+                                this.lines.add(this.current);
+                            }
                             this.advance();
                         }
                         yield null;
@@ -92,7 +123,11 @@ public class Lexer {
                         yield this.emit(TokenType.SLASH);
                     }
                 }
-                case ' ', '\r', '\t', '\n' -> null; // Ignore whitespace
+                case ' ', '\r', '\t' -> null; // Ignore whitespace
+                case '\n' -> {
+                    this.lines.add(this.current);
+                    yield null;
+                }
                 case '"' -> string();
                 default -> {
                     if (isNumeric(c)) {
@@ -144,7 +179,7 @@ public class Lexer {
             this.advance();
         }
 
-        if (this.eof()) {
+        if (this.peek(0) != '"') {
             return this.error("Unterminated string.");
         }
 
@@ -181,7 +216,27 @@ public class Lexer {
 
     public Token error(String message) {
         if (this.handler != null) {
-            this.handler.report(this.start, message);
+            int ln = 0;
+            int r = this.lines.size();
+            while (ln < r) {
+                int i = (ln + r) >> 1;
+                if (this.lines.get(i) <= this.start) {
+                    ln = i + 1;
+                } else {
+                    r = i;
+                }
+            }
+            final int col = this.start - this.lines.get(ln - 1) + 1;
+            final String info;
+            if (this.lines.size() == 1) {
+                info = this.source;
+            } else if (ln >= this.lines.size()) {
+                info = this.source.substring(this.lines.get(ln - 1));
+            } else {
+                info = this.source.substring(this.lines.get(ln - 1), this.lines.get(ln) - 1);
+            }
+            final Position position = new Position(this.start, ln, col, info);
+            this.handler.report(position, message);
         }
         return this.emit(TokenType.ILLEGAL);
     }

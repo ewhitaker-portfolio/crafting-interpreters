@@ -1,9 +1,5 @@
 package io.portfolio.ewhitaker;
 
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.List;
-
 import io.portfolio.ewhitaker.lox.Lox;
 import io.portfolio.ewhitaker.tool.GenerateAst;
 
@@ -20,16 +16,21 @@ public interface Main {
     static int EXIT_DATA_FAILURE = 65;
     static int EXIT_IO_FAILURE = 74;
 
-    static void main(String[] args) throws Exception {
+    static void main(String[] args) {
         if (args.length > 2) {
-            System.out.println("Usage: java -jar crafting-interpreters.jar [script | --generate <directory>]");
-            System.exit(EXIT_USAGE_FAILURE);
-        }
-
-        if (args.length == 2) {
+            exitUsage();
+        } else if (args.length == 2) {
+            if (!"generate".equals(args[0])) {
+                exitUsage();
+            }
             System.exit(GenerateAst.defineAst(args[1], "Expr", GenerateAst.types));
         }
 
         System.exit(Lox.start(args));
+    }
+
+    static void exitUsage() {
+        System.out.println("Usage: java -jar crafting-interpreters.jar [<script> | generate <directory>]");
+        System.exit(EXIT_USAGE_FAILURE);
     }
 }

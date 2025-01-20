@@ -65,8 +65,8 @@ public class Lox {
     }
 
     public static void run(String source) {
-        Lexer lexer = new Lexer(source, (int offset, String message) -> {
-            report(source, offset, message);
+        Lexer lexer = new Lexer(source, (Position position, String message) -> {
+            report(source, position, message);
         });
         List<Token> tokens = lexer.tokens();
 
@@ -76,34 +76,13 @@ public class Lox {
         }
     }
 
-    public static void report(String source, int offset, String message) {
+    public static void report(String source, Position position, String message) {
         System.err.println("Error: " + message);
-        System.err.println(format(source, offset));
+        final String prefix = position.line() + " | ";
+        System.err.println("\t" + prefix + position.info());
+        final String spaces = " ".repeat((position.column() - 1) + prefix.length());
+        System.err.println("\t" + spaces + "^-- Here.");
 
         hadError = true;
-    }
-
-    public static String format(String source, int offset) {
-        int nlNum = 1;
-        int nlPos = 0;
-        for (int i = 0; i < offset; ++i) {
-            if (source.charAt(i) == '\n') {
-                ++nlNum;
-                nlPos = i;
-            }
-        }
-
-        StringBuilder line = new StringBuilder();
-        for (int i = nlPos; i < source.length(); ++i) {
-            char c = source.charAt(i);
-            if (c == '\n') {
-                break;
-            }
-            line.append(c);
-        }
-
-        final String prefix = nlNum + " | ";
-        final String spaces = " ".repeat((offset - nlPos) + prefix.length());
-        return '\t' + prefix + line + '\n' + '\t' + spaces + "^-- Here.";
     }
 }

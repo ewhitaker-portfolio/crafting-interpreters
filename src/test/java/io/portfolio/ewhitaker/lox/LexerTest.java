@@ -147,12 +147,14 @@ public class LexerTest {
                         new Token(TokenType.ILLEGAL, "%", 15),
                         new Token(TokenType.EOF, "", 16),
                 }, "Unexpected character."),
-                /* #10 */new Test("var unterminated = \"missing", new Token[] {
-                        new Token(TokenType.VAR, "var", 0),
-                        new Token(TokenType.IDENTIFIER, "unterminated", 4),
-                        new Token(TokenType.EQUAL, "=", 17),
-                        new Token(TokenType.ILLEGAL, "\"missing", 19),
-                        new Token(TokenType.EOF, "", 27),
+                /* #10 */new Test("""
+                        // single-line comment
+                        var unterminated = "missing""", new Token[] {
+                        new Token(TokenType.VAR, "var", 23),
+                        new Token(TokenType.IDENTIFIER, "unterminated", 27),
+                        new Token(TokenType.EQUAL, "=", 40),
+                        new Token(TokenType.ILLEGAL, "\"missing", 42),
+                        new Token(TokenType.EOF, "", 50),
                 }, "Unterminated string."),
                 /* #11 */new Test("""
                         // single-line comment
@@ -193,8 +195,7 @@ public class LexerTest {
         for (int i = 0; i < tests.length; ++i) {
             Test test = tests[i];
             final int finalI = i;
-            Lexer lexer = new Lexer(test.input, (int offset, String message) -> {
-                Lox.report(test.input, offset, message);
+            Lexer lexer = new Lexer(test.input, (Position _, String message) -> {
                 if (test.message != message) {
                     throw new IllegalArgumentException(error(finalI, null, test.message + " != " + message));
                 }
