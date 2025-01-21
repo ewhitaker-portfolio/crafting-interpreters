@@ -1,10 +1,11 @@
-package io.portfolio.ewhitaker.lox.print;
+package io.portfolio.ewhitaker.lox.printer;
 
 import io.portfolio.ewhitaker.lox.Expr;
 import io.portfolio.ewhitaker.lox.Token;
 import io.portfolio.ewhitaker.lox.TokenType;
 
-public class RPNPrinter implements Expr.Visitor<String> {
+public class Printer implements Expr.Visitor<String> {
+
     public String print(Expr expression) {
         return expression.accept(this);
     }
@@ -16,7 +17,7 @@ public class RPNPrinter implements Expr.Visitor<String> {
 
     @Override
     public String visitGroupingExpr(Expr.Grouping expr) {
-        return expr.expression().accept(this);
+        return parenthesize("group", expr.expression());
     }
 
     @Override
@@ -35,11 +36,12 @@ public class RPNPrinter implements Expr.Visitor<String> {
     public String parenthesize(String name, Expr... exprs) {
         StringBuilder builder = new StringBuilder();
 
+        builder.append("(").append(name);
         for (Expr expr : exprs) {
-            builder.append(expr.accept(this));
             builder.append(" ");
+            builder.append(expr.accept(this));
         }
-        builder.append(name);
+        builder.append(")");
 
         return builder.toString();
     }
@@ -52,7 +54,6 @@ public class RPNPrinter implements Expr.Visitor<String> {
                 new Token(TokenType.STAR, "*", 0),
                 new Expr.Grouping(
                         new Expr.Literal(45.67)));
-
-        System.out.println(new RPNPrinter().print(expression));
+        System.out.println(new Printer().print(expression));
     }
 }

@@ -27,28 +27,23 @@ public class Lexer {
         keywords.put("while", TokenType.WHILE);
     }
 
-    public final String source;
+    public final Source source;
     public final ErrorHandler handler;
 
     public int start = 0;
     public int current = 0;
 
-    public List<Integer> lines = new ArrayList<>();
-
-    public Lexer(String source, ErrorHandler handler) {
+    public Lexer(Source source, ErrorHandler handler) {
         this.source = source;
         this.handler = handler;
-
-        this.lines.add(0);
     }
 
     public List<Token> tokens() {
         List<Token> tokens = new ArrayList<>();
-        Token next;
-        while ((next = this.next()).type() != TokenType.EOF) {
-            tokens.add(next);
+        while (!this.eof()) {
+            tokens.add(this.next());
         }
-        tokens.add(next);
+        tokens.add(this.next());
         return tokens;
     }
 
@@ -114,7 +109,7 @@ public class Lexer {
                                 --stack;
                             }
                             if (this.peek(0) == '\n') {
-                                this.lines.add(this.current);
+                                this.source.lines.add(this.current);
                             }
                             this.advance();
                         }
@@ -125,18 +120,20 @@ public class Lexer {
                 }
                 case ' ', '\r', '\t' -> null; // Ignore whitespace
                 case '\n' -> {
-                    this.lines.add(this.current);
+                    this.source.lines.add(this.current);
                     yield null;
                 }
                 case '"' -> string();
                 default -> {
                     if (isNumeric(c)) {
                         yield this.number();
-                    } else if (isAlpha(c)) {
+                    }
+
+                    if (isAlpha(c)) {
                         yield this.identifier();
                     }
 
-                    yield this.error("Unexpected character.");
+                    yield this.error(this.start, "Unexpected character.");
                 }
             };
 
@@ -145,7 +142,7 @@ public class Lexer {
             }
         }
 
-        return new Token(TokenType.EOF, "", this.current);
+        return new Token(TokenType.EOF, "", this.source.input.length());
     }
 
     public Token identifier() {
@@ -153,7 +150,7 @@ public class Lexer {
             this.advance();
         }
 
-        final String lexeme = this.source.substring(this.start, this.current);
+        final String lexeme = this.source.input.substring(this.start, this.current);
         TokenType type = keywords.get(lexeme);
         return this.emit(type == null ? TokenType.IDENTIFIER : type, lexeme);
     }
@@ -180,69 +177,53 @@ public class Lexer {
         }
 
         if (this.peek(0) != '"') {
-            return this.error("Unterminated string.");
+            return this.error(this.start, "Unterminated string.");
         }
 
         // The closing ".
         this.advance();
 
-        final String lexeme = source.substring(this.start + 1, this.current - 1);
+        final String lexeme = this.source.input.substring(this.start + 1, this.current - 1);
         return this.emit(TokenType.STRING, lexeme);
     }
 
     public boolean match(char expect) {
-        if (this.peek(0) != expect) {
-            return false;
+        if (this.check(expect)) {
+            this.advance();
+            return true;
         }
 
-        this.advance();
-        return true;
+        return false;
     }
 
-    public char peek(int distance) {
-        if (this.current + distance >= this.source.length()) {
-            return '\0';
-        }
-        return source.charAt(this.current + distance);
+    public boolean check(char expect) {
+        return this.peek(0) == expect;
     }
 
     public char advance() {
-        return this.source.charAt(this.current++);
+        return this.source.input.charAt(this.current++);
+    }
+
+    public char peek(int distance) {
+        if (this.current + distance >= this.source.input.length()) {
+            return '\0';
+        }
+        return this.source.input.charAt(this.current + distance);
     }
 
     public boolean eof() {
-        return this.current >= this.source.length();
+        return this.peek(0) == '\0';
     }
 
-    public Token error(String message) {
+    public Token error(int offset, String message) {
         if (this.handler != null) {
-            int ln = 0;
-            int r = this.lines.size();
-            while (ln < r) {
-                int i = (ln + r) >> 1;
-                if (this.lines.get(i) <= this.start) {
-                    ln = i + 1;
-                } else {
-                    r = i;
-                }
-            }
-            final int col = this.start - this.lines.get(ln - 1) + 1;
-            final String info;
-            if (this.lines.size() == 1) {
-                info = this.source;
-            } else if (ln >= this.lines.size()) {
-                info = this.source.substring(this.lines.get(ln - 1));
-            } else {
-                info = this.source.substring(this.lines.get(ln - 1), this.lines.get(ln) - 1);
-            }
-            final Position position = new Position(this.start, ln, col, info);
-            this.handler.report(position, message);
+            this.handler.report(this.source.position(offset), message);
         }
         return this.emit(TokenType.ILLEGAL);
     }
 
     public Token emit(TokenType type) {
-        return this.emit(type, this.source.substring(this.start, this.current));
+        return this.emit(type, this.source.input.substring(this.start, this.current));
     }
 
     public Token emit(TokenType type, String lexeme) {

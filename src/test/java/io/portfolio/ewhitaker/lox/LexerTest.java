@@ -195,7 +195,9 @@ public class LexerTest {
         for (int i = 0; i < tests.length; ++i) {
             Test test = tests[i];
             final int finalI = i;
-            Lexer lexer = new Lexer(test.input, (Position _, String message) -> {
+            final Source source = new Source(test.input);
+            Lexer lexer = new Lexer(source, (Source.Position position, String message) -> {
+                Lox.report(source, position, message);
                 if (test.message != message) {
                     throw new IllegalArgumentException(error(finalI, null, test.message + " != " + message));
                 }

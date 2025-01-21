@@ -6,9 +6,9 @@ import java.io.InputStreamReader;
 import java.nio.charset.Charset;
 import java.nio.file.Files;
 import java.nio.file.Paths;
-import java.util.List;
 
 import io.portfolio.ewhitaker.Main;
+import io.portfolio.ewhitaker.lox.printer.Printer;
 
 public class Lox {
     public static boolean hadError = false;
@@ -30,7 +30,7 @@ public class Lox {
             return Main.EXIT_IO_FAILURE;
         }
 
-        run(new String(bytes, Charset.defaultCharset()));
+        run(new Source(new String(bytes, Charset.defaultCharset())));
 
         // Indicate an error in the exit code.
         if (hadError) {
@@ -57,29 +57,35 @@ public class Lox {
             if (line == null) {
                 break;
             }
-            run(line);
+            run(new Source(line));
             hadError = false;
         }
 
         return Main.EXIT_SUCCESS;
     }
 
-    public static void run(String source) {
-        Lexer lexer = new Lexer(source, (Position position, String message) -> {
-            report(source, position, message);
-        });
-        List<Token> tokens = lexer.tokens();
+    public static void run(Source source) {
+        Parser parser = new Parser(source);
+        Expr expression = parser.parse();
 
-        // For now, just print the tokens.
-        for (Token token : tokens) {
-            System.out.println(token);
+        // Stop if there was a syntax error.
+        if (hadError) {
+            return;
         }
+
+        System.out.println(new Printer().print(expression));
     }
 
-    public static void report(String source, Position position, String message) {
+    public static void report(Source source, Source.Position position, String message) {
         System.err.println("Error: " + message);
         final String prefix = position.line() + " | ";
-        System.err.println("\t" + prefix + position.info());
+        final String line;
+        if (position.line() - 1 == source.lines.size() - 1) {
+            line = source.input.substring(source.lines.get(position.line() - 1));
+        } else {
+            line = source.input.substring(source.lines.get(position.line() - 1), source.lines.get(position.line()) - 1);
+        }
+        System.err.println("\t" + prefix + line);
         final String spaces = " ".repeat((position.column() - 1) + prefix.length());
         System.err.println("\t" + spaces + "^-- Here.");
 

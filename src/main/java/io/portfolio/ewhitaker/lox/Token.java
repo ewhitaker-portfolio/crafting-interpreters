@@ -5,7 +5,7 @@ public record Token(TokenType type, String lexeme, int offset) {
     public String toString() {
         return "Token" + "{" +
                 "type=" + this.type + "," +
-                "lexeme=" + this.lexeme + "," +
+                "lexeme='" + this.lexeme + "'," +
                 "offset=" + this.offset +
                 "}";
     }
