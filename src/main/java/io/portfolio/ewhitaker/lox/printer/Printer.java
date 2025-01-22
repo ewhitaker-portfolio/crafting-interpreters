@@ -11,29 +11,44 @@ public class Printer implements Expr.Visitor<String> {
     }
 
     @Override
-    public String visitBinaryExpr(Expr.Binary expr) {
-        return parenthesize(expr.operator().lexeme(), expr.left(), expr.right());
-    }
-
-    @Override
-    public String visitGroupingExpr(Expr.Grouping expr) {
-        return parenthesize("group", expr.expression());
-    }
-
-    @Override
     public String visitLiteralExpr(Expr.Literal expr) {
-        if (expr.value() == null) {
+        if (expr.value().type() == TokenType.NIL) {
             return "nil";
         }
-        return expr.value().toString();
+        return expr.value().lexeme();
+    }
+
+    @Override
+    public String visitCommaExpr(Expr.Comma expr) {
+        return notate(",", expr.left(), expr.right());
+    }
+
+    @Override
+    public String visitTernaryExpr(Expr.Ternary expr) {
+        return notate("?:", expr.condition(), expr.consequence(), expr.alternative());
+    }
+
+    @Override
+    public String visitBinaryExpr(Expr.Binary expr) {
+        return notate(expr.operator().lexeme(), expr.left(), expr.right());
     }
 
     @Override
     public String visitUnaryExpr(Expr.Unary expr) {
-        return parenthesize(expr.operator().lexeme(), expr.right());
+        return notate(expr.operator().lexeme(), expr.right());
     }
 
-    public String parenthesize(String name, Expr... exprs) {
+    @Override
+    public String visitGroupingExpr(Expr.Grouping expr) {
+        return notate("group", expr.expression());
+    }
+
+    @Override
+    public String visitIllegalExpr(Expr.Illegal expr) {
+        return "";
+    }
+
+    public String notate(String name, Expr... exprs) {
         StringBuilder builder = new StringBuilder();
 
         builder.append("(").append(name);
@@ -50,10 +65,10 @@ public class Printer implements Expr.Visitor<String> {
         Expr expression = new Expr.Binary(
                 new Expr.Unary(
                         new Token(TokenType.MINUS, "-", 0),
-                        new Expr.Literal(123)),
+                        new Expr.Literal(new Token(TokenType.NUMBER, "123", 0))),
                 new Token(TokenType.STAR, "*", 0),
                 new Expr.Grouping(
-                        new Expr.Literal(45.67)));
+                        new Expr.Literal(new Token(TokenType.NUMBER, "45.67", 0))));
         System.out.println(new Printer().print(expression));
     }
 }

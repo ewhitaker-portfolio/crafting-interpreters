@@ -30,6 +30,8 @@ public class Lexer {
     public final Source source;
     public final ErrorHandler handler;
 
+    public char ch = 0;
+
     public int start = 0;
     public int current = 0;
 
@@ -51,8 +53,8 @@ public class Lexer {
         while (!this.eof()) {
             this.start = this.current; // We are at the beginning of the next lexeme.
 
-            char c = this.advance();
-            Token token = switch (c) {
+            this.ch = this.advance();
+            Token token = switch (this.ch) {
                 case '(' -> this.emit(TokenType.LEFT_PAREN);
                 case ')' -> this.emit(TokenType.RIGHT_PAREN);
                 case '{' -> this.emit(TokenType.LEFT_BRACE);
@@ -62,6 +64,8 @@ public class Lexer {
                 case '-' -> this.emit(TokenType.MINUS);
                 case '+' -> this.emit(TokenType.PLUS);
                 case ';' -> this.emit(TokenType.SEMICOLON);
+                case '?' -> this.emit(TokenType.QUESTION);
+                case ':' -> this.emit(TokenType.COLON);
                 case '*' -> this.emit(TokenType.STAR);
                 case '!' -> {
                     if (this.match('=')) {
@@ -95,23 +99,23 @@ public class Lexer {
                     if (this.match('/')) {
                         // A comment goes until the end of the line.
                         while (this.peek(0) != '\n' && !this.eof()) {
-                            this.advance();
+                            this.ch = this.advance();
                         }
                         yield null;
                     } else if (this.match('*')) {
                         int stack = 1;
                         while (stack != 0 && !this.eof()) {
                             if (this.peek(0) == '/' && this.peek(1) == '*') {
-                                this.advance();
+                                this.ch = this.advance();
                                 ++stack;
                             } else if (this.peek(0) == '*' && this.peek(1) == '/') {
-                                this.advance();
+                                this.ch = this.advance();
                                 --stack;
                             }
                             if (this.peek(0) == '\n') {
                                 this.source.lines.add(this.current);
                             }
-                            this.advance();
+                            this.ch = this.advance();
                         }
                         yield null;
                     } else {
@@ -125,11 +129,11 @@ public class Lexer {
                 }
                 case '"' -> string();
                 default -> {
-                    if (isNumeric(c)) {
+                    if (isNumeric(this.ch)) {
                         yield this.number();
                     }
 
-                    if (isAlpha(c)) {
+                    if (isAlpha(this.ch)) {
                         yield this.identifier();
                     }
 
@@ -147,7 +151,7 @@ public class Lexer {
 
     public Token identifier() {
         while (isAlphaNumeric(peek(0))) {
-            this.advance();
+            this.ch = this.advance();
         }
 
         final String lexeme = this.source.input.substring(this.start, this.current);
@@ -157,14 +161,14 @@ public class Lexer {
 
     public Token number() {
         while (isNumeric(this.peek(0))) {
-            this.advance();
+            this.ch = this.advance();
         }
 
         if (this.peek(0) == '.' && isNumeric(this.peek(1))) {
-            this.advance();
+            this.ch = this.advance();
 
             while (isNumeric(this.peek(0))) {
-                this.advance();
+                this.ch = this.advance();
             }
         }
 
@@ -173,7 +177,7 @@ public class Lexer {
 
     public Token string() {
         while (this.peek(0) != '"' && this.peek(0) != '\n' && !this.eof()) {
-            this.advance();
+            this.ch = this.advance();
         }
 
         if (this.peek(0) != '"') {
@@ -181,7 +185,7 @@ public class Lexer {
         }
 
         // The closing ".
-        this.advance();
+        this.ch = this.advance();
 
         final String lexeme = this.source.input.substring(this.start + 1, this.current - 1);
         return this.emit(TokenType.STRING, lexeme);
@@ -189,7 +193,7 @@ public class Lexer {
 
     public boolean match(char expect) {
         if (this.check(expect)) {
-            this.advance();
+            this.ch = this.advance();
             return true;
         }
 

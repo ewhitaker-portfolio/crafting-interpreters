@@ -1,5 +1,6 @@
 package io.portfolio.ewhitaker.lox;
 
+import java.util.ArrayList;
 import java.util.List;
 
 public class Parser {
@@ -17,7 +18,8 @@ public class Parser {
     public final Source source;
     public final List<Token> tokens;
 
-    public Token matched = null;
+    public Token tok = null;
+
     public int current = 0;
 
     public Parser(Source source) {
@@ -37,7 +39,29 @@ public class Parser {
     }
 
     public Expr expression() {
-        return equality();
+        return comma();
+    }
+
+    public Expr comma() {
+        Expr expr = this.conditional();
+
+        while (this.match(TokenType.COMMA)) {
+            expr = new Expr.Comma(expr, this.conditional());
+        }
+
+        return expr;
+    }
+
+    public Expr conditional() {
+        Expr expr = this.equality();
+
+        if (this.match(TokenType.QUESTION)) {
+            Expr consequence = this.expression();
+            this.consume(TokenType.COLON, "Expect ':' after expression.");
+            expr = new Expr.Ternary(expr, consequence, this.conditional());
+        }
+
+        return expr;
     }
 
     // TODO: abstract
@@ -45,7 +69,7 @@ public class Parser {
         Expr expr = this.comparison();
 
         while (this.match(TokenType.BANG_EQUAL, TokenType.EQUAL_EQUAL)) {
-            expr = new Expr.Binary(expr, this.matched, this.comparison());
+            expr = new Expr.Binary(expr, this.tok, this.comparison());
         }
 
         return expr;
@@ -55,7 +79,7 @@ public class Parser {
         Expr expr = this.term();
 
         while (this.match(TokenType.GREATER, TokenType.GREATER_EQUAL, TokenType.LESS, TokenType.LESS_EQUAL)) {
-            expr = new Expr.Binary(expr, this.matched, this.term());
+            expr = new Expr.Binary(expr, this.tok, this.term());
         }
 
         return expr;
@@ -65,7 +89,7 @@ public class Parser {
         Expr expr = this.factor();
 
         while (this.match(TokenType.MINUS, TokenType.PLUS)) {
-            expr = new Expr.Binary(expr, this.matched, this.factor());
+            expr = new Expr.Binary(expr, this.tok, this.factor());
         }
 
         return expr;
@@ -75,7 +99,7 @@ public class Parser {
         Expr expr = this.unary();
 
         while (this.match(TokenType.STAR, TokenType.SLASH)) {
-            expr = new Expr.Binary(expr, this.matched, this.unary());
+            expr = new Expr.Binary(expr, this.tok, this.unary());
         }
 
         return expr;
@@ -83,24 +107,42 @@ public class Parser {
 
     public Expr unary() {
         if (this.match(TokenType.BANG, TokenType.MINUS)) {
-            return new Expr.Unary(this.matched, this.unary());
+            return new Expr.Unary(this.tok, this.unary());
+        }
+
+        if (this.match(TokenType.BANG_EQUAL, TokenType.EQUAL_EQUAL)) {
+            Token from = this.tok;
+            this.equality();
+            return new Expr.Illegal(from, this.tok);
+        }
+
+        if (this.match(TokenType.GREATER, TokenType.GREATER_EQUAL, TokenType.LESS, TokenType.LESS_EQUAL)) {
+            Token from = this.tok;
+            this.comparison();
+            return new Expr.Illegal(from, this.tok);
+        }
+
+        if (this.match(TokenType.PLUS)) {
+            Token from = this.tok;
+            this.term();
+            return new Expr.Illegal(from, this.tok);
+        }
+
+        if (this.match(TokenType.STAR, TokenType.SLASH)) {
+            Token from = this.tok;
+            this.factor();
+            return new Expr.Illegal(from, this.tok);
         }
 
         return this.primary();
     }
 
     public Expr primary() {
-        if (this.match(TokenType.FALSE)) {
-            return new Expr.Literal(false);
-        } else if (this.match(TokenType.TRUE)) {
-            return new Expr.Literal(true);
-        } else if (this.match(TokenType.NIL)) {
-            return new Expr.Literal(null);
-        } else if (this.match(TokenType.NUMBER)) {
-            return new Expr.Literal(Double.parseDouble(this.matched.lexeme()));
-        } else if (this.match(TokenType.STRING)) {
-            return new Expr.Literal(this.matched.lexeme());
-        } else if (this.match(TokenType.LEFT_PAREN)) {
+        if (this.match(TokenType.FALSE, TokenType.TRUE, TokenType.NIL, TokenType.NUMBER, TokenType.STRING)) {
+            return new Expr.Literal(this.tok);
+        }
+
+        if (this.match(TokenType.LEFT_PAREN)) {
             Expr expr = expression();
             this.consume(TokenType.RIGHT_PAREN, "Expect ')' after expression.");
             return new Expr.Grouping(expr);
@@ -112,7 +154,7 @@ public class Parser {
     public boolean match(TokenType... types) {
         for (TokenType type : types) {
             if (this.check(type)) {
-                this.matched = this.advance();
+                this.tok = this.advance();
                 return true;
             }
         }
@@ -157,14 +199,14 @@ public class Parser {
     }
 
     public void synchronize() {
-        Token token = this.advance();
+        this.tok = this.advance();
 
         while (!this.eof()) {
-            if (token.type() == TokenType.SEMICOLON) {
+            if (this.tok.type() == TokenType.SEMICOLON) {
                 return;
             }
 
-            switch (token.type()) {
+            switch (this.tok.type()) {
                 case CLASS, FUN, VAR, FOR, IF, WHILE, PRINT, RETURN -> {
                     return;
                 }
@@ -172,7 +214,7 @@ public class Parser {
                 }
             }
 
-            token = this.advance();
+            this.tok = this.advance();
         }
     }
 }

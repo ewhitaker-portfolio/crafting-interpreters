@@ -13,13 +13,16 @@ import io.portfolio.ewhitaker.Main;
 public class GenerateAst {
     public static final String working = System.getProperty("user.dir");
 
-    public static final List<String> types = new ArrayList<>();
+    public static final List<String> expression = new ArrayList<>();
 
     static {
-        types.add("Binary   : Expr left, Token operator, Expr right");
-        types.add("Grouping : Expr expression");
-        types.add("Literal  : Object value");
-        types.add("Unary    : Token operator, Expr right");
+        expression.add("Literal  : String value");
+        expression.add("Comma    : Expr left, Expr right");
+        expression.add("Ternary  : Expr condition, Expr consequence, Expr alternative");
+        expression.add("Binary   : Expr left, Token operator, Expr right");
+        expression.add("Unary    : Token operator, Expr right");
+        expression.add("Grouping : Expr expression");
+        expression.add("Illegal  : Token from, Token to");
     }
 
     public static int defineAst(String outputDir, String baseName, List<String> types) {
@@ -50,9 +53,10 @@ public class GenerateAst {
         packages.setCharAt(packages.length() - 1, ';');
 
         writer.println("package " + packages);
+        writer.println();
         writer.println("import java.util.List;");
-
-        writer.println("public sealed interface " + baseName + " {");
+        writer.println();
+        writer.println("public sealed interface " + baseName + " extends Node {");
 
         defineVisitor(writer, baseName, types);
 
@@ -60,31 +64,36 @@ public class GenerateAst {
         for (String type : types) {
             String[] split = type.split(":");
             defineAstNode(writer, baseName, split[0].trim(), split[1].trim());
+            writer.println();
         }
 
         // The base accept() method.
-        writer.println("\t<R> R accept(Visitor<R> visitor);");
-
+        writer.println(indent("<R> R accept(Visitor<R> visitor);", 1));
         writer.println("}");
     }
 
     public static void defineVisitor(PrintWriter writer, String baseName, List<String> types) {
-        writer.println("\tpublic interface Visitor<R> {");
+        writer.println(indent("public interface Visitor<R> {", 1));
 
         for (String type : types) {
             String name = type.split(":")[0].trim();
-            writer.println("\t\tR visit" + name + baseName + "(" + name + " " + baseName.toLowerCase() + ");");
+            writer.println(indent("R visit" + name + baseName + "(" + name + " " + baseName.toLowerCase() + ");", 2));
+            writer.println();
         }
 
-        writer.println("\t}");
+        writer.println(indent("}", 1));
     }
 
     public static void defineAstNode(PrintWriter writer, String baseName, String className, String fields) {
-        writer.println("\trecord " + className + "(" + fields + ") implements " + baseName + " {");
-        writer.println("\t\t@Override");
-        writer.println("\t\tpublic <R> R accept(Visitor<R> visitor) {");
-        writer.println("\t\t\treturn visitor.visit" + className + baseName + "(this);");
-        writer.println("\t\t}");
-        writer.println("\t}");
+        writer.println(indent("record " + className + "(" + fields + ") implements " + baseName + " {", 1));
+        writer.println(indent("@Override", 2));
+        writer.println(indent("public <R> R accept(Visitor<R> visitor) {", 2));
+        writer.println(indent("return visitor.visit" + className + baseName + "(this);", 3));
+        writer.println(indent("}", 2));
+        writer.println(indent("}", 1));
+    }
+
+    public static String indent(String x, int c) {
+        return "   ".repeat(c) + x;
     }
 }

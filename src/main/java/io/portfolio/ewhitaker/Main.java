@@ -19,11 +19,13 @@ public interface Main {
     static void main(String[] args) {
         if (args.length > 2) {
             exitUsage();
-        } else if (args.length == 2) {
+        }
+
+        if (args.length == 2) {
             if (!"generate".equals(args[0])) {
                 exitUsage();
             }
-            System.exit(GenerateAst.defineAst(args[1], "Expr", GenerateAst.types));
+            System.exit(GenerateAst.defineAst(args[1], "Expr", GenerateAst.expression));
         }
 
         System.exit(Lox.start(args));
