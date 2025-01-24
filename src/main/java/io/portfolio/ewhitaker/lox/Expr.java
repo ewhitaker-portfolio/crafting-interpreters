@@ -6,15 +6,11 @@ public sealed interface Expr extends Node {
     public interface Visitor<R> {
         R visitLiteralExpr(Literal expr);
 
-        R visitCommaExpr(Comma expr);
-
         R visitTernaryExpr(Ternary expr);
 
         R visitBinaryExpr(Binary expr);
 
         R visitUnaryExpr(Unary expr);
-
-        R visitGroupingExpr(Grouping expr);
 
         R visitIllegalExpr(Illegal expr);
     }
@@ -23,13 +19,6 @@ public sealed interface Expr extends Node {
         @Override
         public <R> R accept(Visitor<R> visitor) {
             return visitor.visitLiteralExpr(this);
-        }
-    }
-
-    record Comma(Expr left, Expr right) implements Expr {
-        @Override
-        public <R> R accept(Visitor<R> visitor) {
-            return visitor.visitCommaExpr(this);
         }
     }
 
@@ -51,13 +40,6 @@ public sealed interface Expr extends Node {
         @Override
         public <R> R accept(Visitor<R> visitor) {
             return visitor.visitUnaryExpr(this);
-        }
-    }
-
-    record Grouping(Expr expression) implements Expr {
-        @Override
-        public <R> R accept(Visitor<R> visitor) {
-            return visitor.visitGroupingExpr(this);
         }
     }
 

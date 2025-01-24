@@ -17,11 +17,9 @@ public class GenerateAst {
 
     static {
         expression.add("Literal  : String value");
-        expression.add("Comma    : Expr left, Expr right");
-        expression.add("Ternary  : Expr condition, Expr consequence, Expr alternative");
+        expression.add("Ternary  : Expr left, Expr middle, Expr right");
         expression.add("Binary   : Expr left, Token operator, Expr right");
         expression.add("Unary    : Token operator, Expr right");
-        expression.add("Grouping : Expr expression");
         expression.add("Illegal  : Token from, Token to");
     }
 

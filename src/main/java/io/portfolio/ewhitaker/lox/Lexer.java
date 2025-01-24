@@ -30,7 +30,7 @@ public class Lexer {
     public final Source source;
     public final ErrorHandler handler;
 
-    public char ch = 0;
+    public char ch = '\0';
 
     public int start = 0;
     public int current = 0;

@@ -34,7 +34,7 @@ public class Source {
         int l = 0;
         int h = lines.size();
         while (l < h) {
-            int i = (l + h) >> 1;
+            int i = l + ((l + h) >> 1);
             if (lines.get(i) <= offset) {
                 l = i + 1;
             } else {

@@ -8,7 +8,7 @@ import io.portfolio.ewhitaker.tool.GenerateAst;
 //TODO: do-while loop, foreach loop
 //TODO: implement prototypes instead of classes, object literals
 //TODO: new keyword for object instantiation
-//TOOD: remove semicolon
+//TODO: remove semicolon
 
 public interface Main {
     static int EXIT_SUCCESS = 0;
@@ -17,18 +17,20 @@ public interface Main {
     static int EXIT_IO_FAILURE = 74;
 
     static void main(String[] args) {
-        if (args.length > 2) {
-            exitUsage();
-        }
-
-        if (args.length == 2) {
-            if (!"generate".equals(args[0])) {
-                exitUsage();
-            }
-            System.exit(GenerateAst.defineAst(args[1], "Expr", GenerateAst.expression));
-        }
-
-        System.exit(Lox.start(args));
+        System.out.print("Hello world");
+        System.out.print("\13");
+        // if (args.length > 2) {
+        // exitUsage();
+        // }
+        //
+        // if (args.length == 2) {
+        // if (!"generate".equals(args[0])) {
+        // exitUsage();
+        // }
+        // System.exit(GenerateAst.defineAst(args[1], "Expr", GenerateAst.expression));
+        // }
+        //
+        // System.exit(Lox.start(args));
     }
 
     static void exitUsage() {
