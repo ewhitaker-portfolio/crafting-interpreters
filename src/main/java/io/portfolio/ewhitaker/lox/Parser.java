@@ -94,8 +94,24 @@ public class Parser {
     }
 
     public Expr primary() {
-        if (this.match(TokenType.FALSE, TokenType.TRUE, TokenType.NIL, TokenType.NUMBER, TokenType.STRING)) {
-            return new Expr.Literal(this.tok);
+        if (this.match(TokenType.FALSE)) {
+            return new Expr.Literal(this.tok, false);
+        }
+
+        if (this.match(TokenType.TRUE)) {
+            return new Expr.Literal(this.tok, true);
+        }
+
+        if (this.match(TokenType.NIL)) {
+            return new Expr.Literal(this.tok, null);
+        }
+
+        if (this.match(TokenType.NUMBER)) {
+            return new Expr.Literal(this.tok, Double.parseDouble(this.tok.lexeme()));
+        }
+
+        if (this.match(TokenType.STRING)) {
+            return new Expr.Literal(this.tok, this.tok.lexeme());
         }
 
         if (this.match(TokenType.LEFT_PAREN)) {

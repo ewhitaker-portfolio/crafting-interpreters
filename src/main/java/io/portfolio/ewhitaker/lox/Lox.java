@@ -8,10 +8,12 @@ import java.nio.file.Files;
 import java.nio.file.Paths;
 
 import io.portfolio.ewhitaker.Main;
-import io.portfolio.ewhitaker.lox.printer.Printer;
 
 public class Lox {
-    public static boolean hadError = false;
+    public static final Interpreter interpreter = new Interpreter();
+
+    public static boolean hadCompiletimeError = false;
+    public static boolean hadRuntimeError = false;
 
     public static int start(String[] args) {
         if (args.length == 1) {
@@ -33,8 +35,12 @@ public class Lox {
         run(new Source(new String(bytes, Charset.defaultCharset())));
 
         // Indicate an error in the exit code.
-        if (hadError) {
+        if (hadCompiletimeError) {
             return Main.EXIT_DATA_FAILURE;
+        }
+
+        if (hadRuntimeError) {
+            return Main.EXIT_INTERNAL_FAILURE;
         }
 
         return Main.EXIT_SUCCESS;
@@ -58,37 +64,47 @@ public class Lox {
                 break;
             }
             run(new Source(line));
-            hadError = false;
+            hadCompiletimeError = false;
         }
 
         return Main.EXIT_SUCCESS;
     }
 
+    // TODO: interpreter should take a parser
     public static void run(Source source) {
         Parser parser = new Parser(source);
         Expr expression = parser.parse();
 
         // Stop if there was a syntax error.
-        if (hadError) {
+        if (hadCompiletimeError) {
             return;
         }
 
-        System.out.println(new Printer().print(expression));
+        interpreter.interpret(source, expression);
     }
 
-    public static void report(Source source, Source.Position position, String message) {
-        System.err.println("Error: " + message);
-        final String prefix = position.line() + " | ";
+    public static void compiletimeError(Source source, Parser.Error error) {
+        System.err.println("Error: " + error.message());
+        final String prefix = error.position().line() + " | ";
         final String line;
-        if (position.line() - 1 == source.lines.size() - 1) {
-            line = source.input.substring(source.lines.get(position.line() - 1));
+        if (error.position().line() - 1 == source.lines.size() - 1) {
+            line = source.input.substring(source.lines.get(error.position().line() - 1));
         } else {
-            line = source.input.substring(source.lines.get(position.line() - 1), source.lines.get(position.line()) - 1);
+            line = source.input.substring(
+                    source.lines.get(error.position().line() - 1), source.lines.get(error.position().line()) - 1
+            );
         }
         System.err.println("\t" + prefix + line);
-        final String spaces = " ".repeat((position.column() - 1) + prefix.length());
+        final String spaces = " ".repeat((error.position().column() - 1) + prefix.length());
         System.err.println("\t" + spaces + "^-- Here.");
 
-        hadError = true;
+        hadCompiletimeError = true;
+    }
+
+    // TODO: implement call stack
+    public static void runtimeError(Source source, Interpreter.Error error) {
+        System.err.println(error.getMessage() + "\n[line " + error.position.line() + "]");
+
+        hadRuntimeError = true;
     }
 }

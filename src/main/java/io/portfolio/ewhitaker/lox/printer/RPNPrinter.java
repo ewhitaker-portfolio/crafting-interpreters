@@ -6,10 +6,6 @@ import io.portfolio.ewhitaker.lox.TokenType;
 
 public class RPNPrinter implements Expr.Visitor<String> {
     public String print(Expr expression) {
-        return this.accept(expression);
-    }
-
-    public String accept(Expr expression) {
         return switch (expression) {
             case Expr.Literal expr -> this.visitLiteralExpr(expr);
             case Expr.Ternary expr -> this.visitTernaryExpr(expr);
@@ -21,10 +17,10 @@ public class RPNPrinter implements Expr.Visitor<String> {
 
     @Override
     public String visitLiteralExpr(Expr.Literal expr) {
-        if (expr.value().type() == TokenType.NIL) {
+        if (expr.token().type() == TokenType.NIL) {
             return "nil";
         }
-        return expr.value().lexeme();
+        return expr.token().lexeme();
     }
 
     @Override
@@ -54,7 +50,7 @@ public class RPNPrinter implements Expr.Visitor<String> {
         StringBuilder builder = new StringBuilder();
 
         for (Expr expr : exprs) {
-            builder.append(this.accept(expr));
+            builder.append(this.print(expr));
             builder.append(" ");
         }
         builder.append(name);
@@ -66,10 +62,10 @@ public class RPNPrinter implements Expr.Visitor<String> {
         Expr expression = new Expr.Binary(
                 new Expr.Unary(
                         new Token(TokenType.MINUS, "-", 0),
-                        new Expr.Literal(new Token(TokenType.NUMBER, "123", 0))
+                        new Expr.Literal(new Token(TokenType.NUMBER, "123", 0), 123)
                 ),
                 new Token(TokenType.STAR, "*", 0),
-                new Expr.Literal(new Token(TokenType.NUMBER, "45.67", 0))
+                new Expr.Literal(new Token(TokenType.NUMBER, "45.67", 0), 45.67)
         );
         System.out.println(new RPNPrinter().print(expression));
     }

@@ -14,23 +14,22 @@ public interface Main {
     static int EXIT_SUCCESS = 0;
     static int EXIT_USAGE_FAILURE = 64;
     static int EXIT_DATA_FAILURE = 65;
+    static int EXIT_INTERNAL_FAILURE = 70;
     static int EXIT_IO_FAILURE = 74;
 
     static void main(String[] args) {
-        System.out.print("Hello world");
-        System.out.print("\13");
-        // if (args.length > 2) {
-        // exitUsage();
-        // }
-        //
-        // if (args.length == 2) {
-        // if (!"generate".equals(args[0])) {
-        // exitUsage();
-        // }
-        // System.exit(GenerateAst.defineAst(args[1], "Expr", GenerateAst.expression));
-        // }
-        //
-        // System.exit(Lox.start(args));
+        if (args.length > 2) {
+            exitUsage();
+        }
+
+        if (args.length == 2) {
+            if (!"generate".equals(args[0])) {
+                exitUsage();
+            }
+            System.exit(GenerateAst.defineAst(args[1], "Expr", GenerateAst.expression));
+        }
+
+        System.exit(Lox.start(args));
     }
 
     static void exitUsage() {

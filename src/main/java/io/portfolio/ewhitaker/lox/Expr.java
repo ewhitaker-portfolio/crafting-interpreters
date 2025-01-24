@@ -15,7 +15,7 @@ public sealed interface Expr extends Node {
         R visitIllegalExpr(Illegal expr);
     }
 
-    record Literal(Token value) implements Expr {
+    record Literal(Token token, Object value) implements Expr {
         @Override
         public <R> R accept(Visitor<R> visitor) {
             return visitor.visitLiteralExpr(this);

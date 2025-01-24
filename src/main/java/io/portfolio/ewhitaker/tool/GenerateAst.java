@@ -16,7 +16,7 @@ public class GenerateAst {
     public static final List<String> expression = new ArrayList<>();
 
     static {
-        expression.add("Literal  : String value");
+        expression.add("Literal  : Token position, Object value");
         expression.add("Ternary  : Expr left, Expr middle, Expr right");
         expression.add("Binary   : Expr left, Token operator, Expr right");
         expression.add("Unary    : Token operator, Expr right");
