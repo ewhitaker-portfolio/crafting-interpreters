@@ -74,7 +74,10 @@ primary     -> "true"
              | IDENTIFIER
              | "(" expression ")"
              | "super" "." IDENTIFIER 
-             | ( "!=" | "==" ) ;
+             | ( "!=" | "==" ) equality
+             | ( ">" | ">=" | "<" | "<=" ) comparison
+             | ( "+" ) term
+             | ( "/" | "*" ) factor ;
 ```
 
 ### 1.1.4 Utility rules

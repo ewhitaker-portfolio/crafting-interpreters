@@ -1,14 +1,23 @@
-package io.portfolio.ewhitaker.lox;
+package io.portfolio.ewhitaker.lox.lexer;
 
 import java.util.Objects;
+
+import io.portfolio.ewhitaker.lox.Lox;
+import io.portfolio.ewhitaker.lox.Position;
+import io.portfolio.ewhitaker.lox.Source;
+import io.portfolio.ewhitaker.lox.lexer.token.Token;
+import io.portfolio.ewhitaker.lox.lexer.token.TokenType;
+import io.portfolio.ewhitaker.lox.parser.Parser;
 
 public class LexerTest {
     public void test() {
         record Test(String input, Token[] expect, String message) {
         }
         Test[] tests = new Test[] {
-                /* #0 */new Test(
-                        "var five = 5.0;", new Token[] {
+                /* #0 */
+                new Test(
+                        "var five = 5.0;",
+                        new Token[] {
                                 new Token(TokenType.VAR, "var", 0),
                                 new Token(TokenType.IDENTIFIER, "five", 4),
                                 new Token(TokenType.EQUAL, "=", 9),
@@ -17,8 +26,10 @@ public class LexerTest {
                                 new Token(TokenType.EOF, "", 15),
                         }, ""
                 ),
-                /* #1 */new Test(
-                        "var ten = 10;", new Token[] {
+                /* #1 */
+                new Test(
+                        "var ten = 10;",
+                        new Token[] {
                                 new Token(TokenType.VAR, "var", 0),
                                 new Token(TokenType.IDENTIFIER, "ten", 4),
                                 new Token(TokenType.EQUAL, "=", 8),
@@ -27,11 +38,13 @@ public class LexerTest {
                                 new Token(TokenType.EOF, "", 13),
                         }, ""
                 ),
-                /* #2 */new Test(
+                /* #2 */
+                new Test(
                         """
                                 fun add(x, y) {
                                     return x + y;
-                                }""", new Token[] {
+                                }""",
+                        new Token[] {
                                 new Token(TokenType.FUN, "fun", 0),
                                 new Token(TokenType.IDENTIFIER, "add", 4),
                                 new Token(TokenType.LEFT_PAREN, "(", 7),
@@ -49,8 +62,82 @@ public class LexerTest {
                                 new Token(TokenType.EOF, "", 35),
                         }, ""
                 ),
-                /* #3 */new Test(
-                        "var result = add(five, ten);", new Token[] {
+                /* #3 */
+                new Test(
+                        """
+                                fun subtract(x, y) {
+                                    return x - y;
+                                }""",
+                        new Token[] {
+                                new Token(TokenType.FUN, "fun", 0),
+                                new Token(TokenType.IDENTIFIER, "subtract", 4),
+                                new Token(TokenType.LEFT_PAREN, "(", 12),
+                                new Token(TokenType.IDENTIFIER, "x", 13),
+                                new Token(TokenType.COMMA, ",", 14),
+                                new Token(TokenType.IDENTIFIER, "y", 16),
+                                new Token(TokenType.RIGHT_PAREN, ")", 17),
+                                new Token(TokenType.LEFT_BRACE, "{", 19),
+                                new Token(TokenType.RETURN, "return", 25),
+                                new Token(TokenType.IDENTIFIER, "x", 32),
+                                new Token(TokenType.MINUS, "-", 34),
+                                new Token(TokenType.IDENTIFIER, "y", 36),
+                                new Token(TokenType.SEMICOLON, ";", 37),
+                                new Token(TokenType.RIGHT_BRACE, "}", 39),
+                                new Token(TokenType.EOF, "", 40),
+                        }, ""
+                ),
+                /* #4 */
+                new Test(
+                        """
+                                fun multiply(x, y) {
+                                    return x * y;
+                                }""",
+                        new Token[] {
+                                new Token(TokenType.FUN, "fun", 0),
+                                new Token(TokenType.IDENTIFIER, "multiply", 4),
+                                new Token(TokenType.LEFT_PAREN, "(", 12),
+                                new Token(TokenType.IDENTIFIER, "x", 13),
+                                new Token(TokenType.COMMA, ",", 14),
+                                new Token(TokenType.IDENTIFIER, "y", 16),
+                                new Token(TokenType.RIGHT_PAREN, ")", 17),
+                                new Token(TokenType.LEFT_BRACE, "{", 19),
+                                new Token(TokenType.RETURN, "return", 25),
+                                new Token(TokenType.IDENTIFIER, "x", 32),
+                                new Token(TokenType.STAR, "*", 34),
+                                new Token(TokenType.IDENTIFIER, "y", 36),
+                                new Token(TokenType.SEMICOLON, ";", 37),
+                                new Token(TokenType.RIGHT_BRACE, "}", 39),
+                                new Token(TokenType.EOF, "", 40),
+                        }, ""
+                ),
+                /* #5 */
+                new Test(
+                        """
+                                fun divide(x, y) {
+                                    return x / y;
+                                }""",
+                        new Token[] {
+                                new Token(TokenType.FUN, "fun", 0),
+                                new Token(TokenType.IDENTIFIER, "divide", 4),
+                                new Token(TokenType.LEFT_PAREN, "(", 10),
+                                new Token(TokenType.IDENTIFIER, "x", 11),
+                                new Token(TokenType.COMMA, ",", 12),
+                                new Token(TokenType.IDENTIFIER, "y", 14),
+                                new Token(TokenType.RIGHT_PAREN, ")", 15),
+                                new Token(TokenType.LEFT_BRACE, "{", 17),
+                                new Token(TokenType.RETURN, "return", 23),
+                                new Token(TokenType.IDENTIFIER, "x", 30),
+                                new Token(TokenType.SLASH, "/", 32),
+                                new Token(TokenType.IDENTIFIER, "y", 34),
+                                new Token(TokenType.SEMICOLON, ";", 35),
+                                new Token(TokenType.RIGHT_BRACE, "}", 37),
+                                new Token(TokenType.EOF, "", 38),
+                        }, ""
+                ),
+                /* #6 */
+                new Test(
+                        "var result = add(five, ten);",
+                        new Token[] {
                                 new Token(TokenType.VAR, "var", 0),
                                 new Token(TokenType.IDENTIFIER, "result", 4),
                                 new Token(TokenType.EQUAL, "=", 11),
@@ -64,24 +151,43 @@ public class LexerTest {
                                 new Token(TokenType.EOF, "", 28),
                         }, ""
                 ),
-                /* #4 */new Test(
-                        "var negate = !result;", new Token[] {
-                                new Token(TokenType.VAR, "var", 0),
-                                new Token(TokenType.IDENTIFIER, "negate", 4),
-                                new Token(TokenType.EQUAL, "=", 11),
-                                new Token(TokenType.BANG, "!", 13),
-                                new Token(TokenType.IDENTIFIER, "result", 14),
-                                new Token(TokenType.SEMICOLON, ";", 20),
-                                new Token(TokenType.EOF, "", 21),
+                /* #7 */
+                new Test(
+                        """
+                                if (!result) {
+                                    print true;
+                                } else {
+                                    print false;
+                                }""",
+                        new Token[] {
+                                new Token(TokenType.IF, "if", 0),
+                                new Token(TokenType.LEFT_PAREN, "(", 3),
+                                new Token(TokenType.BANG, "!", 4),
+                                new Token(TokenType.IDENTIFIER, "result", 5),
+                                new Token(TokenType.RIGHT_PAREN, ")", 11),
+                                new Token(TokenType.LEFT_BRACE, "{", 13),
+                                new Token(TokenType.PRINT, "print", 19),
+                                new Token(TokenType.TRUE, "true", 25),
+                                new Token(TokenType.SEMICOLON, ";", 29),
+                                new Token(TokenType.RIGHT_BRACE, "}", 31),
+                                new Token(TokenType.ELSE, "else", 33),
+                                new Token(TokenType.LEFT_BRACE, "{", 38),
+                                new Token(TokenType.PRINT, "print", 44),
+                                new Token(TokenType.FALSE, "false", 50),
+                                new Token(TokenType.SEMICOLON, ";", 55),
+                                new Token(TokenType.RIGHT_BRACE, "}", 57),
+                                new Token(TokenType.EOF, "", 58),
                         }, ""
                 ),
-                /* #5 */new Test(
+                /* #8 */
+                new Test(
                         """
                                 var i = 0;
                                 while (i < 10) {
                                     print i;
                                     i = i + 1;
-                                }""", new Token[] {
+                                }""",
+                        new Token[] {
                                 new Token(TokenType.VAR, "var", 0),
                                 new Token(TokenType.IDENTIFIER, "i", 4),
                                 new Token(TokenType.EQUAL, "=", 6),
@@ -107,11 +213,13 @@ public class LexerTest {
                                 new Token(TokenType.EOF, "", 57),
                         }, ""
                 ),
-                /* #6 */new Test(
+                /* #9 */
+                new Test(
                         """
                                 for (var i = 10; i >= 0; i = i - 1) {
                                     print i;
-                                }""", new Token[] {
+                                }""",
+                        new Token[] {
                                 new Token(TokenType.FOR, "for", 0),
                                 new Token(TokenType.LEFT_PAREN, "(", 4),
                                 new Token(TokenType.VAR, "var", 5),
@@ -137,40 +245,29 @@ public class LexerTest {
                                 new Token(TokenType.EOF, "", 52),
                         }, ""
                 ),
-                /* #7 */new Test(
-                        """
-                                if (true) {
-                                    print "hello world";
-                                }""", new Token[] {
-                                new Token(TokenType.IF, "if", 0),
-                                new Token(TokenType.LEFT_PAREN, "(", 3),
-                                new Token(TokenType.TRUE, "true", 4),
-                                new Token(TokenType.RIGHT_PAREN, ")", 8),
-                                new Token(TokenType.LEFT_BRACE, "{", 10),
-                                new Token(TokenType.PRINT, "print", 16),
-                                new Token(TokenType.STRING, "hello world", 22),
-                                new Token(TokenType.SEMICOLON, ";", 35),
-                                new Token(TokenType.RIGHT_BRACE, "}", 37),
-                                new Token(TokenType.EOF, "", 38),
-                        }, ""
-                ),
-                /* #8 */new Test(
-                        "", new Token[] {
+                /* #10 */
+                new Test(
+                        "",
+                        new Token[] {
                                 new Token(TokenType.EOF, "", 0),
                         }, ""
                 ),
-                /* #9 */new Test(
-                        "var unexpected %", new Token[] {
+                /* #11 */
+                new Test(
+                        "var unexpected %",
+                        new Token[] {
                                 new Token(TokenType.VAR, "var", 0),
                                 new Token(TokenType.IDENTIFIER, "unexpected", 4),
                                 new Token(TokenType.ILLEGAL, "%", 15),
                                 new Token(TokenType.EOF, "", 16),
                         }, "Unexpected character."
                 ),
-                /* #10 */new Test(
+                /* #12 */
+                new Test(
                         """
                                 // single-line comment
-                                var unterminated = "missing""", new Token[] {
+                                var unterminated = "missing""",
+                        new Token[] {
                                 new Token(TokenType.VAR, "var", 23),
                                 new Token(TokenType.IDENTIFIER, "unterminated", 27),
                                 new Token(TokenType.EQUAL, "=", 40),
@@ -178,12 +275,14 @@ public class LexerTest {
                                 new Token(TokenType.EOF, "", 50),
                         }, "Unterminated string."
                 ),
-                /* #11 */new Test(
+                /* #13 */
+                new Test(
                         """
                                 // single-line comment
                                 fun documented() {
                                     return nil;
-                                }""", new Token[] {
+                                }""",
+                        new Token[] {
                                 new Token(TokenType.FUN, "fun", 23),
                                 new Token(TokenType.IDENTIFIER, "documented", 27),
                                 new Token(TokenType.LEFT_PAREN, "(", 37),
@@ -196,14 +295,16 @@ public class LexerTest {
                                 new Token(TokenType.EOF, "", 59),
                         }, ""
                 ),
-                /* #12 */new Test(
+                /* #14 */
+                new Test(
                         """
                                 /*
                                  * /* nested multi-line comment */
                                  */
                                 fun documented() {
                                     return nil;
-                                }""", new Token[] {
+                                }""",
+                        new Token[] {
                                 new Token(TokenType.FUN, "fun", 42),
                                 new Token(TokenType.IDENTIFIER, "documented", 46),
                                 new Token(TokenType.LEFT_PAREN, "(", 56),
@@ -221,8 +322,8 @@ public class LexerTest {
         for (int i = 0; i < tests.length; ++i) {
             Test test = tests[i];
             final int finalI = i;
-            final Source source = new Source(test.input);
-            Lexer lexer = new Lexer(source, (Source.Position position, String message) -> {
+            final Source source = new Source(test.input, false);
+            Lexer lexer = new Lexer(source, (Position position, String message) -> {
                 Lox.compiletimeError(source, new Parser.Error(position, message));
                 if (test.message != message) {
                     throw new IllegalArgumentException(error(finalI, null, test.message + " != " + message));

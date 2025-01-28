@@ -1,47 +1,38 @@
 package io.portfolio.ewhitaker.lox.printer;
 
-import io.portfolio.ewhitaker.lox.Expr;
-import io.portfolio.ewhitaker.lox.Token;
-import io.portfolio.ewhitaker.lox.TokenType;
+import io.portfolio.ewhitaker.lox.lexer.token.Token;
+import io.portfolio.ewhitaker.lox.lexer.token.TokenType;
+import io.portfolio.ewhitaker.lox.parser.ast.Expr;
 
-public class Printer implements Expr.Visitor<String> {
+public class Printer {
 
     public String print(Expr expression) {
         return switch (expression) {
-            case Expr.Literal expr -> this.visitLiteralExpr(expr);
-            case Expr.Ternary expr -> this.visitTernaryExpr(expr);
-            case Expr.Binary expr -> this.visitBinaryExpr(expr);
-            case Expr.Unary expr -> this.visitUnaryExpr(expr);
-            case Expr.Illegal expr -> this.visitIllegalExpr(expr);
+            case Expr.Literal expr -> this.printLiteralExpr(expr);
+            case Expr.Ternary expr -> this.printTernaryExpr(expr);
+            case Expr.Binary expr -> this.printBinaryExpr(expr);
+            case Expr.Unary expr -> this.printUnaryExpr(expr);
+            case Expr.Illegal _ -> null;
         };
     }
 
-    @Override
-    public String visitLiteralExpr(Expr.Literal expr) {
+    public String printLiteralExpr(Expr.Literal expr) {
         if (expr.token().type() == TokenType.NIL) {
             return "nil";
         }
         return expr.token().lexeme();
     }
 
-    @Override
-    public String visitTernaryExpr(Expr.Ternary expr) {
-        return notate("?:", expr.condition(), expr.consequence(), expr.alternative());
+    public String printTernaryExpr(Expr.Ternary expr) {
+        return notate("?:", expr.left(), expr.middle(), expr.right());
     }
 
-    @Override
-    public String visitBinaryExpr(Expr.Binary expr) {
+    public String printBinaryExpr(Expr.Binary expr) {
         return notate(expr.operator().lexeme(), expr.left(), expr.right());
     }
 
-    @Override
-    public String visitUnaryExpr(Expr.Unary expr) {
+    public String printUnaryExpr(Expr.Unary expr) {
         return notate(expr.operator().lexeme(), expr.right());
-    }
-
-    @Override
-    public String visitIllegalExpr(Expr.Illegal expr) {
-        return "";
     }
 
     public String notate(String name, Expr... exprs) {

@@ -1,11 +1,22 @@
-package io.portfolio.ewhitaker.lox;
+package io.portfolio.ewhitaker.lox.lexer;
 
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Objects;
+
+import io.portfolio.ewhitaker.lox.Position;
+import io.portfolio.ewhitaker.lox.Source;
+import io.portfolio.ewhitaker.lox.lexer.token.Token;
+import io.portfolio.ewhitaker.lox.lexer.token.TokenType;
 
 public class Lexer {
+    @FunctionalInterface
+    public interface ErrorHandler {
+        void report(Position position, String message);
+    }
+
     public static final Map<String, TokenType> keywords = new HashMap<>();
 
     static {
@@ -35,18 +46,31 @@ public class Lexer {
     public int start = 0;
     public int current = 0;
 
+    public final List<Token> tokens = new ArrayList<>();
+    public Token last = null;
+
     public Lexer(Source source, ErrorHandler handler) {
-        this.source = source;
+        this.source = Objects.requireNonNull(source);
         this.handler = handler;
     }
 
-    public List<Token> tokens() {
-        List<Token> tokens = new ArrayList<>();
-        while (!this.eof()) {
-            tokens.add(this.next());
+    // TODO: revisit
+    public Token tokenAt(int index) {
+        if (this.last != null && this.last.type() == TokenType.EOF) {
+            return this.last;
         }
-        tokens.add(this.next());
-        return tokens;
+
+        final int diff = (index + 1) - this.tokens.size();
+        if (diff > 0) {
+            for (int i = 0; i < diff; ++i) {
+                this.last = this.next();
+                this.tokens.add(this.last);
+                if (this.last.type() == TokenType.EOF) {
+                    return this.last;
+                }
+            }
+        }
+        return this.tokens.get(index);
     }
 
     public Token next() {
@@ -54,7 +78,7 @@ public class Lexer {
             this.start = this.current; // We are at the beginning of the next lexeme.
 
             this.ch = this.advance();
-            Token token = switch (this.ch) {
+            final Token token = switch (this.ch) {
                 case '(' -> this.emit(TokenType.LEFT_PAREN);
                 case ')' -> this.emit(TokenType.RIGHT_PAREN);
                 case '{' -> this.emit(TokenType.LEFT_BRACE);
@@ -155,7 +179,7 @@ public class Lexer {
         }
 
         final String lexeme = this.source.input.substring(this.start, this.current);
-        TokenType type = keywords.get(lexeme);
+        final TokenType type = keywords.get(lexeme);
         return this.emit(type == null ? TokenType.IDENTIFIER : type, lexeme);
     }
 

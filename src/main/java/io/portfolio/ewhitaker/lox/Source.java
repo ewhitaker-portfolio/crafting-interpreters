@@ -4,22 +4,14 @@ import java.util.ArrayList;
 import java.util.List;
 
 public class Source {
-    public record Position(int offset, int line, int column) {
-        @Override
-        public String toString() {
-            return "Position" + "{" +
-                    "offset=" + this.offset + "," +
-                    "line=" + this.line + "," +
-                    "column=" + this.column +
-                    "}";
-        }
-    }
-
     public final String input;
     public final List<Integer> lines = new ArrayList<>();
 
-    public Source(String input) {
+    public final boolean trace;
+
+    public Source(String input, boolean trace) {
         this.input = input;
+        this.trace = trace;
         this.lines.add(0);
     }
 

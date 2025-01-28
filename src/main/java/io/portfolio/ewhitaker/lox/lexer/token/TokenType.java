@@ -1,4 +1,4 @@
-package io.portfolio.ewhitaker.lox;
+package io.portfolio.ewhitaker.lox.lexer.token;
 
 public enum TokenType {
     // Single-charactter tokens.

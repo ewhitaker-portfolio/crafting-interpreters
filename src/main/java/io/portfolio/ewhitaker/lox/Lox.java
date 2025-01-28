@@ -8,6 +8,8 @@ import java.nio.file.Files;
 import java.nio.file.Paths;
 
 import io.portfolio.ewhitaker.Main;
+import io.portfolio.ewhitaker.lox.parser.Parser;
+import io.portfolio.ewhitaker.lox.parser.ast.Expr;
 
 public class Lox {
     public static final Interpreter interpreter = new Interpreter();
@@ -32,7 +34,7 @@ public class Lox {
             return Main.EXIT_IO_FAILURE;
         }
 
-        run(new Source(new String(bytes, Charset.defaultCharset())));
+        run(new String(bytes, Charset.defaultCharset()));
 
         // Indicate an error in the exit code.
         if (hadCompiletimeError) {
@@ -63,17 +65,17 @@ public class Lox {
             if (line == null) {
                 break;
             }
-            run(new Source(line));
+            run(line);
             hadCompiletimeError = false;
         }
 
         return Main.EXIT_SUCCESS;
     }
 
-    // TODO: interpreter should take a parser
-    public static void run(Source source) {
-        Parser parser = new Parser(source);
-        Expr expression = parser.parse();
+    public static void run(String input) {
+        final Source source = new Source(input, false);
+        final Parser parser = new Parser(source);
+        final Expr expression = parser.parse();
 
         // Stop if there was a syntax error.
         if (hadCompiletimeError) {

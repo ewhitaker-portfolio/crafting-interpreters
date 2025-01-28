@@ -1,4 +1,4 @@
-package io.portfolio.ewhitaker.lox;
+package io.portfolio.ewhitaker.lox.lexer.token;
 
 public record Token(TokenType type, String lexeme, int offset) {
     @Override
