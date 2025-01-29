@@ -1,13 +1,10 @@
 package io.portfolio.ewhitaker.lox.lexer;
 
-import java.util.Objects;
-
-import io.portfolio.ewhitaker.lox.Lox;
 import io.portfolio.ewhitaker.lox.Position;
 import io.portfolio.ewhitaker.lox.Source;
 import io.portfolio.ewhitaker.lox.lexer.token.Token;
 import io.portfolio.ewhitaker.lox.lexer.token.TokenType;
-import io.portfolio.ewhitaker.lox.parser.Parser;
+import io.portfolio.ewhitaker.util.Asserts;
 
 public class LexerTest {
     public void test() {
@@ -182,6 +179,180 @@ public class LexerTest {
                 /* #8 */
                 new Test(
                         """
+                                if (five != ten) {
+                                    print true;
+                                } else {
+                                    print false;
+                                }""",
+                        new Token[] {
+                                new Token(TokenType.IF, "if", 0),
+                                new Token(TokenType.LEFT_PAREN, "(", 3),
+                                new Token(TokenType.IDENTIFIER, "five", 4),
+                                new Token(TokenType.BANG_EQUAL, "!=", 9),
+                                new Token(TokenType.IDENTIFIER, "ten", 12),
+                                new Token(TokenType.RIGHT_PAREN, ")", 15),
+                                new Token(TokenType.LEFT_BRACE, "{", 17),
+                                new Token(TokenType.PRINT, "print", 23),
+                                new Token(TokenType.TRUE, "true", 29),
+                                new Token(TokenType.SEMICOLON, ";", 33),
+                                new Token(TokenType.RIGHT_BRACE, "}", 35),
+                                new Token(TokenType.ELSE, "else", 37),
+                                new Token(TokenType.LEFT_BRACE, "{", 42),
+                                new Token(TokenType.PRINT, "print", 48),
+                                new Token(TokenType.FALSE, "false", 54),
+                                new Token(TokenType.SEMICOLON, ";", 59),
+                                new Token(TokenType.RIGHT_BRACE, "}", 61),
+                                new Token(TokenType.EOF, "", 62),
+                        }, ""
+                ),
+                /* #9 */
+                new Test(
+                        """
+                                if (five == ten) {
+                                    print true;
+                                } else {
+                                    print false;
+                                }""",
+                        new Token[] {
+                                new Token(TokenType.IF, "if", 0),
+                                new Token(TokenType.LEFT_PAREN, "(", 3),
+                                new Token(TokenType.IDENTIFIER, "five", 4),
+                                new Token(TokenType.EQUAL_EQUAL, "==", 9),
+                                new Token(TokenType.IDENTIFIER, "ten", 12),
+                                new Token(TokenType.RIGHT_PAREN, ")", 15),
+                                new Token(TokenType.LEFT_BRACE, "{", 17),
+                                new Token(TokenType.PRINT, "print", 23),
+                                new Token(TokenType.TRUE, "true", 29),
+                                new Token(TokenType.SEMICOLON, ";", 33),
+                                new Token(TokenType.RIGHT_BRACE, "}", 35),
+                                new Token(TokenType.ELSE, "else", 37),
+                                new Token(TokenType.LEFT_BRACE, "{", 42),
+                                new Token(TokenType.PRINT, "print", 48),
+                                new Token(TokenType.FALSE, "false", 54),
+                                new Token(TokenType.SEMICOLON, ";", 59),
+                                new Token(TokenType.RIGHT_BRACE, "}", 61),
+                                new Token(TokenType.EOF, "", 62),
+                        }, ""
+                ),
+                /* #10 */
+                new Test(
+                        """
+                                if (five > ten) {
+                                    print true;
+                                } else {
+                                    print false;
+                                }""",
+                        new Token[] {
+                                new Token(TokenType.IF, "if", 0),
+                                new Token(TokenType.LEFT_PAREN, "(", 3),
+                                new Token(TokenType.IDENTIFIER, "five", 4),
+                                new Token(TokenType.GREATER, ">", 9),
+                                new Token(TokenType.IDENTIFIER, "ten", 11),
+                                new Token(TokenType.RIGHT_PAREN, ")", 14),
+                                new Token(TokenType.LEFT_BRACE, "{", 16),
+                                new Token(TokenType.PRINT, "print", 22),
+                                new Token(TokenType.TRUE, "true", 28),
+                                new Token(TokenType.SEMICOLON, ";", 32),
+                                new Token(TokenType.RIGHT_BRACE, "}", 34),
+                                new Token(TokenType.ELSE, "else", 36),
+                                new Token(TokenType.LEFT_BRACE, "{", 41),
+                                new Token(TokenType.PRINT, "print", 47),
+                                new Token(TokenType.FALSE, "false", 53),
+                                new Token(TokenType.SEMICOLON, ";", 58),
+                                new Token(TokenType.RIGHT_BRACE, "}", 60),
+                                new Token(TokenType.EOF, "", 61),
+                        }, ""
+                ),
+                /* #11 */
+                new Test(
+                        """
+                                if (five >= ten) {
+                                    print true;
+                                } else {
+                                    print false;
+                                }""",
+                        new Token[] {
+                                new Token(TokenType.IF, "if", 0),
+                                new Token(TokenType.LEFT_PAREN, "(", 3),
+                                new Token(TokenType.IDENTIFIER, "five", 4),
+                                new Token(TokenType.GREATER_EQUAL, ">=", 9),
+                                new Token(TokenType.IDENTIFIER, "ten", 12),
+                                new Token(TokenType.RIGHT_PAREN, ")", 15),
+                                new Token(TokenType.LEFT_BRACE, "{", 17),
+                                new Token(TokenType.PRINT, "print", 23),
+                                new Token(TokenType.TRUE, "true", 29),
+                                new Token(TokenType.SEMICOLON, ";", 33),
+                                new Token(TokenType.RIGHT_BRACE, "}", 35),
+                                new Token(TokenType.ELSE, "else", 37),
+                                new Token(TokenType.LEFT_BRACE, "{", 42),
+                                new Token(TokenType.PRINT, "print", 48),
+                                new Token(TokenType.FALSE, "false", 54),
+                                new Token(TokenType.SEMICOLON, ";", 59),
+                                new Token(TokenType.RIGHT_BRACE, "}", 61),
+                                new Token(TokenType.EOF, "", 62),
+                        }, ""
+                ),
+                /* #12 */
+                new Test(
+                        """
+                                if (five < ten) {
+                                    print true;
+                                } else {
+                                    print false;
+                                }""",
+                        new Token[] {
+                                new Token(TokenType.IF, "if", 0),
+                                new Token(TokenType.LEFT_PAREN, "(", 3),
+                                new Token(TokenType.IDENTIFIER, "five", 4),
+                                new Token(TokenType.LESS, "<", 9),
+                                new Token(TokenType.IDENTIFIER, "ten", 11),
+                                new Token(TokenType.RIGHT_PAREN, ")", 14),
+                                new Token(TokenType.LEFT_BRACE, "{", 16),
+                                new Token(TokenType.PRINT, "print", 22),
+                                new Token(TokenType.TRUE, "true", 28),
+                                new Token(TokenType.SEMICOLON, ";", 32),
+                                new Token(TokenType.RIGHT_BRACE, "}", 34),
+                                new Token(TokenType.ELSE, "else", 36),
+                                new Token(TokenType.LEFT_BRACE, "{", 41),
+                                new Token(TokenType.PRINT, "print", 47),
+                                new Token(TokenType.FALSE, "false", 53),
+                                new Token(TokenType.SEMICOLON, ";", 58),
+                                new Token(TokenType.RIGHT_BRACE, "}", 60),
+                                new Token(TokenType.EOF, "", 61),
+                        }, ""
+                ),
+                /* #13 */
+                new Test(
+                        """
+                                if (five <= ten) {
+                                    print true;
+                                } else {
+                                    print false;
+                                }""",
+                        new Token[] {
+                                new Token(TokenType.IF, "if", 0),
+                                new Token(TokenType.LEFT_PAREN, "(", 3),
+                                new Token(TokenType.IDENTIFIER, "five", 4),
+                                new Token(TokenType.LESS_EQUAL, "<=", 9),
+                                new Token(TokenType.IDENTIFIER, "ten", 12),
+                                new Token(TokenType.RIGHT_PAREN, ")", 15),
+                                new Token(TokenType.LEFT_BRACE, "{", 17),
+                                new Token(TokenType.PRINT, "print", 23),
+                                new Token(TokenType.TRUE, "true", 29),
+                                new Token(TokenType.SEMICOLON, ";", 33),
+                                new Token(TokenType.RIGHT_BRACE, "}", 35),
+                                new Token(TokenType.ELSE, "else", 37),
+                                new Token(TokenType.LEFT_BRACE, "{", 42),
+                                new Token(TokenType.PRINT, "print", 48),
+                                new Token(TokenType.FALSE, "false", 54),
+                                new Token(TokenType.SEMICOLON, ";", 59),
+                                new Token(TokenType.RIGHT_BRACE, "}", 61),
+                                new Token(TokenType.EOF, "", 62),
+                        }, ""
+                ),
+                /* #14 */
+                new Test(
+                        """
                                 var i = 0;
                                 while (i < 10) {
                                     print i;
@@ -213,7 +384,7 @@ public class LexerTest {
                                 new Token(TokenType.EOF, "", 57),
                         }, ""
                 ),
-                /* #9 */
+                /* #15 */
                 new Test(
                         """
                                 for (var i = 10; i >= 0; i = i - 1) {
@@ -245,14 +416,14 @@ public class LexerTest {
                                 new Token(TokenType.EOF, "", 52),
                         }, ""
                 ),
-                /* #10 */
+                /* #16 */
                 new Test(
                         "",
                         new Token[] {
                                 new Token(TokenType.EOF, "", 0),
                         }, ""
                 ),
-                /* #11 */
+                /* #17 */
                 new Test(
                         "var unexpected %",
                         new Token[] {
@@ -262,7 +433,7 @@ public class LexerTest {
                                 new Token(TokenType.EOF, "", 16),
                         }, "Unexpected character."
                 ),
-                /* #12 */
+                /* #18 */
                 new Test(
                         """
                                 // single-line comment
@@ -275,7 +446,7 @@ public class LexerTest {
                                 new Token(TokenType.EOF, "", 50),
                         }, "Unterminated string."
                 ),
-                /* #13 */
+                /* #19 */
                 new Test(
                         """
                                 // single-line comment
@@ -295,7 +466,7 @@ public class LexerTest {
                                 new Token(TokenType.EOF, "", 59),
                         }, ""
                 ),
-                /* #14 */
+                /* #20 */
                 new Test(
                         """
                                 /*
@@ -320,34 +491,27 @@ public class LexerTest {
         };
 
         for (int i = 0; i < tests.length; ++i) {
-            Test test = tests[i];
-            final int finalI = i;
+            final Test test = tests[i];
             final Source source = new Source(test.input, false);
-            Lexer lexer = new Lexer(source, (Position position, String message) -> {
-                Lox.compiletimeError(source, new Parser.Error(position, message));
-                if (test.message != message) {
-                    throw new IllegalArgumentException(error(finalI, null, test.message + " != " + message));
-                }
+            final int finalI = i;
+            final Lexer lexer = new Lexer(source, (Position _, String message) -> {
+                Asserts.isEqual(
+                        message, test.message, "Test #" + finalI
+                );
             });
 
-            for (Token expect : test.expect) {
-                Token actual = lexer.next();
-                if (expect.type() != actual.type()) {
-                    throw new IllegalArgumentException(error(i, expect, expect.type() + " != " + actual.type()));
-                }
-
-                if (!Objects.equals(expect.lexeme(), actual.lexeme())) {
-                    throw new IllegalArgumentException(error(i, expect, expect.lexeme() + " != " + actual.lexeme()));
-                }
-
-                if (expect.offset() != actual.offset()) {
-                    throw new IllegalArgumentException(error(i, expect, expect.offset() + " != " + actual.offset()));
-                }
+            for (Token expected : test.expect) {
+                final Token actual = lexer.next();
+                Asserts.isEqual(
+                        actual.type(), expected.type(), "Test #" + i
+                );
+                Asserts.isEqual(
+                        actual.lexeme(), expected.lexeme(), "Test #" + i
+                );
+                Asserts.isEqual(
+                        actual.offset(), expected.offset(), "Test #" + i
+                );
             }
         }
-    }
-
-    public static String error(int i, Token test, String message) {
-        return "#" + i + " " + test + " ==> " + message;
     }
 }

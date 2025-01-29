@@ -8,11 +8,12 @@ import java.nio.file.Files;
 import java.nio.file.Paths;
 
 import io.portfolio.ewhitaker.Main;
+import io.portfolio.ewhitaker.lox.evaluator.Evaluator;
 import io.portfolio.ewhitaker.lox.parser.Parser;
 import io.portfolio.ewhitaker.lox.parser.ast.Expr;
 
 public class Lox {
-    public static final Interpreter interpreter = new Interpreter();
+    public static final Evaluator evaluator = new Evaluator();
 
     public static boolean hadCompiletimeError = false;
     public static boolean hadRuntimeError = false;
@@ -82,30 +83,30 @@ public class Lox {
             return;
         }
 
-        interpreter.interpret(source, expression);
+        evaluator.evaluate(source, expression);
     }
 
-    public static void compiletimeError(Source source, Parser.Error error) {
-        System.err.println("Error: " + error.message());
-        final String prefix = error.position().line() + " | ";
+    public static void compiletimeError(Source source, Position position, String message) {
+        System.err.println("Error: " + message);
+        final String prefix = position.line() + " | ";
         final String line;
-        if (error.position().line() - 1 == source.lines.size() - 1) {
-            line = source.input.substring(source.lines.get(error.position().line() - 1));
+        if (position.line() - 1 == source.lines.size() - 1) {
+            line = source.input.substring(source.lines.get(position.line() - 1));
         } else {
             line = source.input.substring(
-                    source.lines.get(error.position().line() - 1), source.lines.get(error.position().line()) - 1
+                    source.lines.get(position.line() - 1), source.lines.get(position.line()) - 1
             );
         }
         System.err.println("\t" + prefix + line);
-        final String spaces = " ".repeat((error.position().column() - 1) + prefix.length());
+        final String spaces = " ".repeat((position.column() - 1) + prefix.length());
         System.err.println("\t" + spaces + "^-- Here.");
 
         hadCompiletimeError = true;
     }
 
     // TODO: implement call stack
-    public static void runtimeError(Source source, Interpreter.Error error) {
-        System.err.println(error.getMessage() + "\n[line " + error.position.line() + "]");
+    public static void runtimeError(Source source, Position position, String message) {
+        System.err.println(message + "\n[line " + position.line() + "]");
 
         hadRuntimeError = true;
     }

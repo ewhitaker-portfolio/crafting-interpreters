@@ -1,14 +1,17 @@
-package io.portfolio.ewhitaker.lox;
+package io.portfolio.ewhitaker.lox.evaluator;
 
+import io.portfolio.ewhitaker.lox.Lox;
+import io.portfolio.ewhitaker.lox.Position;
+import io.portfolio.ewhitaker.lox.Source;
 import io.portfolio.ewhitaker.lox.lexer.token.Token;
 import io.portfolio.ewhitaker.lox.parser.ast.Expr;
 
-public class Interpreter {
-    public static class Error extends RuntimeException {
+public class Evaluator {
+    public static class RuntimeError extends RuntimeException {
         public final Position position;
         public final String message;
 
-        public Error(Position position, String message) {
+        public RuntimeError(Position position, String message) {
             this.position = position;
             this.message = message;
         }
@@ -16,14 +19,13 @@ public class Interpreter {
 
     public Source source;
 
-    // TODO: maybe this should take source
-    public void interpret(Source source, Expr expression) {
+    public void evaluate(Source source, Expr expression) {
         this.source = source;
         try {
             Object value = this.evaluate(expression);
             System.out.println(stringify(value));
-        } catch (Error error) {
-            Lox.runtimeError(this.source, error);
+        } catch (RuntimeError error) {
+            Lox.runtimeError(this.source, error.position, error.message);
         }
     }
 
@@ -66,11 +68,11 @@ public class Interpreter {
                     yield lDouble + rDouble;
                 }
 
-                if (left instanceof String lString && right instanceof String rString) {
-                    yield lString + rString;
+                if (left instanceof String || right instanceof String) {
+                    yield stringify(left) + stringify(right);
                 }
 
-                throw new Error(
+                throw new RuntimeError(
                         this.source.position(operator.offset()), "Operands must be two numbers or two strings."
                 );
             }
@@ -92,14 +94,14 @@ public class Interpreter {
     }
 
     public Object evaluateIllegalExpr(Expr.Illegal expr) {
-        throw new Error(this.source.position(expr.from().offset()), "");
+        throw new RuntimeError(this.source.position(expr.from().offset()), "");
     }
 
     public Double expectNumberOperand(Token operator, Object operand) {
         if (operand instanceof Double o) {
             return o;
         }
-        throw new Error(this.source.position(operator.offset()), "Operand must be a number.");
+        throw new RuntimeError(this.source.position(operator.offset()), "Operand must be a number.");
     }
 
     public static String stringify(Object object) {

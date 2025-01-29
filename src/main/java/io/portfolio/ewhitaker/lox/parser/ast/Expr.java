@@ -5,7 +5,7 @@ import java.util.List;
 import io.portfolio.ewhitaker.lox.lexer.token.Token;
 
 public sealed interface Expr extends Node {
-    record Literal(Token token, Object value) implements Expr {
+    record Literal(Token kind, Object value) implements Expr {
     }
 
     record Ternary(Expr left, Expr middle, Expr right) implements Expr {

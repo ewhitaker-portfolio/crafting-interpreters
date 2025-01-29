@@ -1,11 +1,10 @@
 package io.portfolio.ewhitaker.lox.parser;
 
-import java.util.ArrayList;
 import java.util.HashMap;
-import java.util.List;
 import java.util.Map;
 import java.util.Objects;
 
+import io.portfolio.ewhitaker.lox.Lox;
 import io.portfolio.ewhitaker.lox.Position;
 import io.portfolio.ewhitaker.lox.Source;
 import io.portfolio.ewhitaker.lox.lexer.Lexer;
@@ -14,13 +13,8 @@ import io.portfolio.ewhitaker.lox.lexer.token.TokenType;
 import io.portfolio.ewhitaker.lox.parser.ast.Expr;
 
 public class Parser {
-    public record Error(Position position, String message) {
-    }
-
     public final Source source;
     public final Lexer lexer;
-
-    public final List<Error> errors = new ArrayList<>();
 
     public Token tok = null;
 
@@ -31,7 +25,7 @@ public class Parser {
     public Parser(Source source) {
         this.source = Objects.requireNonNull(source);
         this.lexer = new Lexer(source, (Position position, String message) -> {
-            this.errors.add(new Error(position, message));
+            Lox.compiletimeError(source, position, message);
         });
     }
 
@@ -179,10 +173,10 @@ public class Parser {
                 TokenType.PLUS,
                 TokenType.STAR, TokenType.SLASH
         )) {
-            return this.panic(this.tok, "Missing left-hand operand.", delimiters);
+            return this.panic("Missing left-hand operand.", expressions);
         }
 
-        return this.panic(this.peek(), "Expect expression.", statements);
+        return this.panic("Expect expression.", statements);
     }
 
     public boolean matches(TokenType... types) {
@@ -218,16 +212,23 @@ public class Parser {
         }
     }
 
-    // TODO: revisit
-    public Expr panic(Token from, String message, TokenType... to) {
+    public Expr panic(String message, TokenType... to) {
+        final Token from = this.tok;
         this.error(from, message);
         this.synchronize(to);
         return new Expr.Illegal(from, this.tok);
     }
 
     public void error(Token token, String message) {
-        this.errors.add(new Error(this.source.position(token.offset()), message));
+        Lox.compiletimeError(this.source, this.source.position(token.offset()), message);
     }
+
+    public static final TokenType[] expressions = new TokenType[] {
+            TokenType.COMMA,
+            TokenType.COLON,
+            TokenType.RIGHT_PAREN,
+            TokenType.SEMICOLON
+    };
 
     public static final TokenType[] statements = new TokenType[] {
             TokenType.CLASS,
@@ -238,14 +239,7 @@ public class Parser {
             TokenType.WHILE,
             TokenType.PRINT,
             TokenType.RETURN,
-    };
-
-    public static final TokenType[] delimiters = new TokenType[] {
-            TokenType.SEMICOLON,
-            TokenType.COLON,
-            TokenType.LEFT_PAREN,
-            TokenType.RIGHT_PAREN,
-            TokenType.COMMA,
+            TokenType.SEMICOLON
     };
 
     public void synchronize(TokenType... types) {

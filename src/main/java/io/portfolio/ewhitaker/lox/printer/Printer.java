@@ -17,10 +17,10 @@ public class Printer {
     }
 
     public String printLiteralExpr(Expr.Literal expr) {
-        if (expr.token().type() == TokenType.NIL) {
+        if (expr.kind().type() == TokenType.NIL) {
             return "nil";
         }
-        return expr.token().lexeme();
+        return expr.kind().lexeme();
     }
 
     public String printTernaryExpr(Expr.Ternary expr) {
