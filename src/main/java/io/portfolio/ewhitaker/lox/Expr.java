@@ -20,6 +20,8 @@ public interface Expr {
 
         R VisitSetExpr(Set expr);
 
+        R VisitSuperExpr(Super expr);
+
         R VisitThisExpr(This expr);
 
         R VisitUnaryExpr(Unary expr);
@@ -80,6 +82,13 @@ public interface Expr {
         @Override
         public <R> R accept(Visitor<R> visitor) {
             return visitor.VisitSetExpr(this);
+        }
+    }
+
+    public record Super(Token keyword, Token method) implements Expr {
+        @Override
+        public <R> R accept(Visitor<R> visitor) {
+            return visitor.VisitSuperExpr(this);
         }
     }
 

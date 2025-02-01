@@ -18,7 +18,7 @@ public class LoxInstance {
 
         LoxFunction method = this.klass.FindMethod(name.lexeme());
         if (method != null) {
-            return method.bind(this);
+            return method.Bind(this);
         }
 
         throw new RuntimeError(name, "Undefined property '" + name.lexeme() + "'.");

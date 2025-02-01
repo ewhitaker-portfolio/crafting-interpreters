@@ -14,7 +14,7 @@ public class LoxFunction implements LoxCallable {
         this.declaration = declaration;
     }
 
-    public LoxFunction bind(LoxInstance instance) {
+    public LoxFunction Bind(LoxInstance instance) {
         Environment environment = new Environment(this.closure);
         environment.Define("this", instance);
         return new LoxFunction(declaration, environment, this.isInitializer);

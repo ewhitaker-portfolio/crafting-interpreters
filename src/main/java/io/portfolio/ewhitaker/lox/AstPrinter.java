@@ -29,6 +29,10 @@ public class AstPrinter implements Expr.Visitor<String>, Stmt.Visitor<String> {
         StringBuilder builder = new StringBuilder();
         builder.append("(class " + stmt.name().lexeme());
 
+        if (stmt.superclass() != null) {
+            builder.append(" < " + this.Print(stmt.superclass()));
+        }
+
         for (Stmt.Function method : stmt.methods()) {
             builder.append(" " + this.Print(method));
         }
@@ -141,6 +145,11 @@ public class AstPrinter implements Expr.Visitor<String>, Stmt.Visitor<String> {
     @Override
     public String VisitSetExpr(Expr.Set expr) {
         return this.parenthesize2("=", expr.object(), expr.name().lexeme(), expr.value());
+    }
+
+    @Override
+    public String VisitSuperExpr(Expr.Super expr) {
+        return this.parenthesize2("super", expr.method());
     }
 
     @Override

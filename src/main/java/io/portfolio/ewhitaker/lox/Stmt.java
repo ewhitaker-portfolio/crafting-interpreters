@@ -30,7 +30,7 @@ public interface Stmt {
         }
     }
 
-    public record Class(Token name, List<Stmt.Function> methods) implements Stmt {
+    public record Class(Token name, Expr.Variable superclass, List<Stmt.Function> methods) implements Stmt {
         @Override
         public <R> R accept(Visitor<R> visitor) {
             return visitor.VisitClassStmt(this);

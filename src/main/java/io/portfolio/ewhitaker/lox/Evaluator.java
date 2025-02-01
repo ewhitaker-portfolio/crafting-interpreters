@@ -86,7 +86,20 @@ public class Evaluator implements Expr.Visitor<Object>, Stmt.Visitor<Void> {
 
     @Override
     public Void VisitClassStmt(Stmt.Class stmt) {
+        Object superclass = null;
+        if (stmt.superclass() != null) {
+            superclass = this.evaluate(stmt.superclass());
+            if (!(superclass instanceof LoxClass)) {
+                throw new RuntimeError(stmt.superclass().name(), "Superclass must be a class.");
+            }
+        }
+
         this.environment.Define(stmt.name().lexeme(), null);
+
+        if (stmt.superclass() != null) {
+            this.environment = new Environment(this.environment);
+            this.environment.Define("super", superclass);
+        }
 
         Map<String, LoxFunction> methods = new HashMap<>();
         for (Stmt.Function method : stmt.methods()) {
@@ -94,7 +107,15 @@ public class Evaluator implements Expr.Visitor<Object>, Stmt.Visitor<Void> {
             methods.put(method.name().lexeme(), function);
         }
 
-        LoxClass klass = new LoxClass(stmt.name().lexeme(), methods);
+//@formatter:off Inheritance
+//      LoxClass klass = new LoxClass(stmt.name().lexeme(), methods);
+//@formatter:on
+        LoxClass klass = new LoxClass(stmt.name().lexeme(), (LoxClass) superclass, methods);
+
+        if (superclass != null) {
+            this.environment = this.environment.Enclosing;
+        }
+
         this.environment.Assign(stmt.name(), klass);
         return null;
     }
@@ -299,6 +320,22 @@ public class Evaluator implements Expr.Visitor<Object>, Stmt.Visitor<Void> {
         Object value = this.evaluate(expr.value());
         instance.Set(expr.name(), value);
         return value;
+    }
+
+    @Override
+    public Object VisitSuperExpr(Expr.Super expr) {
+        int distance = this.locals.get(expr);
+        LoxClass superclass = (LoxClass) this.environment.GetAt(distance, "super");
+
+        LoxInstance object = (LoxInstance) this.environment.GetAt(distance - 1, "this");
+
+        LoxFunction method = superclass.FindMethod(expr.method().lexeme());
+
+        if (method == null) {
+            throw new RuntimeError(expr.method(), "Undefined property '" + expr.method().lexeme() + "'.");
+        }
+
+        return method.Bind(object);
     }
 
     @Override
