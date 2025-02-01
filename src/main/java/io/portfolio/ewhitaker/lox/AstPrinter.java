@@ -3,12 +3,12 @@ package io.portfolio.ewhitaker.lox;
 import java.util.List;
 
 public class AstPrinter implements Expr.Visitor<String>, Stmt.Visitor<String> {
-    public String Print(Expr expr) {
-        return expr.accept(this);
-    }
-
     public String Print(Stmt stmt) {
         return stmt.accept(this);
+    }
+
+    public String Print(Expr expr) {
+        return expr.accept(this);
     }
 
     @Override

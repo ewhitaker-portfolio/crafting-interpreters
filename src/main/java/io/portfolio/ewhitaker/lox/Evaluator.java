@@ -1,7 +1,9 @@
 package io.portfolio.ewhitaker.lox;
 
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
 public class Evaluator implements Expr.Visitor<Object>, Stmt.Visitor<Void> {
     public Environment Globals = new Environment();
@@ -9,6 +11,7 @@ public class Evaluator implements Expr.Visitor<Object>, Stmt.Visitor<Void> {
 //  private Environment environment = new Environment();
 //@formatter:on
     private Environment environment = Globals;
+    private final Map<Expr, Integer> locals = new HashMap<>();
 
 //@formatter:off Statements and State
 //  public void Evaluate(Expr expression) {
@@ -50,12 +53,16 @@ public class Evaluator implements Expr.Visitor<Object>, Stmt.Visitor<Void> {
         }
     }
 
-    private Object evaluate(Expr expr) {
+    private void execute(Stmt stmt) {
+        stmt.accept(this);
+    }
+
+    private Object execute(Expr expr) {
         return expr.accept(this);
     }
 
-    private void execute(Stmt stmt) {
-        stmt.accept(this);
+    public void Resolve(Expr expr, int depth) {
+        this.locals.put(expr, depth);
     }
 
     public void ExecuteBlock(List<Stmt> statements, Environment environment) {
@@ -79,7 +86,7 @@ public class Evaluator implements Expr.Visitor<Object>, Stmt.Visitor<Void> {
 
     @Override
     public Void VisitExpressionStmt(Stmt.Expression stmt) {
-        this.evaluate(stmt.expression());
+        this.execute(stmt.expression());
         return null;
     }
 
@@ -92,7 +99,7 @@ public class Evaluator implements Expr.Visitor<Object>, Stmt.Visitor<Void> {
 
     @Override
     public Void VisitIfStmt(Stmt.If stmt) {
-        if (this.isTruthy(this.evaluate(stmt.condition()))) {
+        if (this.isTruthy(this.execute(stmt.condition()))) {
             this.execute(stmt.thenBranch());
         } else if (stmt.elseBranch() != null) {
             this.execute(stmt.elseBranch());
@@ -102,7 +109,7 @@ public class Evaluator implements Expr.Visitor<Object>, Stmt.Visitor<Void> {
 
     @Override
     public Void VisitPrintStmt(Stmt.Print stmt) {
-        Object value = this.evaluate(stmt.expression());
+        Object value = this.execute(stmt.expression());
         System.out.println(this.stringify(value));
         return null;
     }
@@ -111,7 +118,7 @@ public class Evaluator implements Expr.Visitor<Object>, Stmt.Visitor<Void> {
     public Void VisitReturnStmt(Stmt.Return stmt) {
         Object value = null;
         if (stmt.value() != null) {
-            value = this.evaluate(stmt.value());
+            value = this.execute(stmt.value());
         }
 
         throw new Return(value);
@@ -121,7 +128,7 @@ public class Evaluator implements Expr.Visitor<Object>, Stmt.Visitor<Void> {
     public Void VisitVarStmt(Stmt.Var stmt) {
         Object value = null;
         if (stmt.initializer() != null) {
-            value = this.evaluate(stmt.initializer());
+            value = this.execute(stmt.initializer());
         }
 
         this.environment.Define(stmt.name().lexeme(), value);
@@ -130,7 +137,7 @@ public class Evaluator implements Expr.Visitor<Object>, Stmt.Visitor<Void> {
 
     @Override
     public Void VisitWhileStmt(Stmt.While stmt) {
-        while (this.isTruthy(this.evaluate(stmt.condition()))) {
+        while (this.isTruthy(this.execute(stmt.condition()))) {
             this.execute(stmt.body());
         }
         return null;
@@ -138,15 +145,25 @@ public class Evaluator implements Expr.Visitor<Object>, Stmt.Visitor<Void> {
 
     @Override
     public Object VisitAssignExpr(Expr.Assign expr) {
-        Object value = this.evaluate(expr.value());
-        this.environment.Assign(expr.name(), value);
+        Object value = this.execute(expr.value());
+//@formatter:off Resolving and Binding
+//      this.environment.Assign(expr.name(), value);
+//@formatter:on
+
+        Integer distance = this.locals.get(expr);
+        if (distance != null) {
+            this.environment.AssignAt(distance, expr.name(), value);
+        } else {
+            this.Globals.Assign(expr.name(), value);
+        }
+
         return value;
     }
 
     @Override
     public Object VisitBinaryExpr(Expr.Binary expr) {
-        Object left = this.evaluate(expr.left());
-        Object right = this.evaluate(expr.right());
+        Object left = this.execute(expr.left());
+        Object right = this.execute(expr.right());
 
         return switch (expr.operator().type()) {
             case BANG_EQUAL -> !isEqual(left, right);
@@ -196,11 +213,11 @@ public class Evaluator implements Expr.Visitor<Object>, Stmt.Visitor<Void> {
 
     @Override
     public Object VisitCallExpr(Expr.Call expr) {
-        Object callee = this.evaluate(expr.callee());
+        Object callee = this.execute(expr.callee());
 
         List<Object> arguments = new ArrayList<>();
         for (Expr argument : expr.arguments()) {
-            arguments.add(this.evaluate(argument));
+            arguments.add(this.execute(argument));
         }
 
         if (!(callee instanceof LoxCallable function)) {
@@ -218,7 +235,7 @@ public class Evaluator implements Expr.Visitor<Object>, Stmt.Visitor<Void> {
 
     @Override
     public Object VisitGroupingExpr(Expr.Grouping expr) {
-        return this.evaluate(expr.expression());
+        return this.execute(expr.expression());
     }
 
     @Override
@@ -228,7 +245,7 @@ public class Evaluator implements Expr.Visitor<Object>, Stmt.Visitor<Void> {
 
     @Override
     public Object VisitLogicalExpr(Expr.Logical expr) {
-        Object left = this.evaluate(expr.left());
+        Object left = this.execute(expr.left());
 
         if (expr.operator().type() == TokenType.OR) {
             if (this.isTruthy(left)) {
@@ -240,12 +257,12 @@ public class Evaluator implements Expr.Visitor<Object>, Stmt.Visitor<Void> {
             }
         }
 
-        return this.evaluate(expr.right());
+        return this.execute(expr.right());
     }
 
     @Override
     public Object VisitUnaryExpr(Expr.Unary expr) {
-        Object right = this.evaluate(expr.right());
+        Object right = this.execute(expr.right());
 
         return switch (expr.operator().type()) {
             case BANG -> !this.isTruthy(right);
@@ -259,7 +276,19 @@ public class Evaluator implements Expr.Visitor<Object>, Stmt.Visitor<Void> {
 
     @Override
     public Object VisitVariableExpr(Expr.Variable expr) {
-        return this.environment.Get(expr.name());
+//@formatter:off Resolving and Binding
+//      return this.environment.Get(expr.name());
+//@formatter:on
+        return lookUpVariable(expr.name(), expr);
+    }
+
+    private Object lookUpVariable(Token name, Expr expr) {
+        Integer distance = this.locals.get(expr);
+        if (distance != null) {
+            return this.environment.GetAt(distance, name.lexeme());
+        } else {
+            return this.Globals.Get(name);
+        }
     }
 
     private void checkNumberOperand(Token operator, Object operand) {

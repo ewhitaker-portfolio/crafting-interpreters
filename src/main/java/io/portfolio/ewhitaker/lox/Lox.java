@@ -60,7 +60,6 @@ public class Lox {
         Lexer lexer = new Lexer(source);
         List<Token> tokens = lexer.ScanTokens();
 //@formatter:off Parsing Expressions
-//
 //      // For now, just print the tokens.
 //      for (Token token : tokens) {
 //          System.out.println(token);
@@ -73,6 +72,14 @@ public class Lox {
         List<Stmt> statements = parser.parse();
 
         // Stop if there was a syntax error.
+        if (HadError) {
+            return;
+        }
+
+        Resolver resolver = new Resolver(evaluator);
+        resolver.Resolve(statements);
+
+        // Stop if there was a resolution error.
         if (HadError) {
             return;
         }

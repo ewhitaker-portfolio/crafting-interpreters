@@ -44,4 +44,21 @@ public class Environment {
     public void Define(String name, Object value) {
         this.values.put(name, value);
     }
+
+    public Environment Ancestor(int distance) {
+        Environment environment = this;
+        for (int i = 0; i < distance; ++i) {
+            environment = environment.Enclosing;
+        }
+
+        return environment;
+    }
+
+    public Object GetAt(int distance, String name) {
+        return this.Ancestor(distance).values.get(name);
+    }
+
+    public void AssignAt(int distance, Token name, Object value) {
+        this.Ancestor(distance).values.put(name.lexeme(), value);
+    }
 }
