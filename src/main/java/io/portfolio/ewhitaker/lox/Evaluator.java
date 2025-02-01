@@ -1,10 +1,14 @@
 package io.portfolio.ewhitaker.lox;
 
-import java.beans.Encoder;
+import java.util.ArrayList;
 import java.util.List;
 
 public class Evaluator implements Expr.Visitor<Object>, Stmt.Visitor<Void> {
-    private Environment environment = new Environment();
+    public Environment Globals = new Environment();
+//@formatter:off Functions
+//  private Environment environment = new Environment();
+//@formatter:on
+    private Environment environment = Globals;
 
 //@formatter:off Statements and State
 //  public void Evaluate(Expr expression) {
@@ -16,6 +20,26 @@ public class Evaluator implements Expr.Visitor<Object>, Stmt.Visitor<Void> {
 //      }
 //  }
 //@formatter:on
+
+    public Evaluator() {
+        Globals.Define("clock", new LoxCallable() {
+            @Override
+            public int Arity() {
+                return 0;
+            }
+
+            @Override
+            public Object Call(Evaluator evaluator, List<Object> arguments) {
+                return System.currentTimeMillis() / 1000.0;
+            }
+
+            @Override
+            public String toString() {
+                return "<native fn>";
+            }
+        });
+    }
+
     public void Evaluate(List<Stmt> statements) {
         try {
             for (Stmt statement : statements) {
@@ -60,6 +84,13 @@ public class Evaluator implements Expr.Visitor<Object>, Stmt.Visitor<Void> {
     }
 
     @Override
+    public Void VisitFunctionStmt(Stmt.Function stmt) {
+        LoxFunction function = new LoxFunction(stmt, this.environment);
+        this.environment.Define(stmt.name().lexeme(), function);
+        return null;
+    }
+
+    @Override
     public Void VisitIfStmt(Stmt.If stmt) {
         if (this.isTruthy(this.evaluate(stmt.condition()))) {
             this.execute(stmt.thenBranch());
@@ -74,6 +105,16 @@ public class Evaluator implements Expr.Visitor<Object>, Stmt.Visitor<Void> {
         Object value = this.evaluate(stmt.expression());
         System.out.println(this.stringify(value));
         return null;
+    }
+
+    @Override
+    public Void VisitReturnStmt(Stmt.Return stmt) {
+        Object value = null;
+        if (stmt.value() != null) {
+            value = this.evaluate(stmt.value());
+        }
+
+        throw new Return(value);
     }
 
     @Override
@@ -151,6 +192,28 @@ public class Evaluator implements Expr.Visitor<Object>, Stmt.Visitor<Void> {
             }
             default -> null; // Unreachable.
         };
+    }
+
+    @Override
+    public Object VisitCallExpr(Expr.Call expr) {
+        Object callee = this.evaluate(expr.callee());
+
+        List<Object> arguments = new ArrayList<>();
+        for (Expr argument : expr.arguments()) {
+            arguments.add(this.evaluate(argument));
+        }
+
+        if (!(callee instanceof LoxCallable function)) {
+            throw new RuntimeError(expr.paren(), "Can only call functions and classes.");
+        }
+
+        if (arguments.size() != function.Arity()) {
+            throw new RuntimeError(
+                    expr.paren(), "Expected " + function.Arity() + "  arguments but got " + arguments.size() + "."
+            );
+        }
+
+        return function.Call(this, arguments);
     }
 
     @Override

@@ -8,6 +8,8 @@ public interface Expr {
 
         R VisitBinaryExpr(Binary expr);
 
+        R VisitCallExpr(Call expr);
+
         R VisitGroupingExpr(Grouping expr);
 
         R VisitLiteralExpr(Literal expr);
@@ -30,6 +32,13 @@ public interface Expr {
         @Override
         public <R> R accept(Visitor<R> visitor) {
             return visitor.VisitBinaryExpr(this);
+        }
+    }
+
+    public record Call(Expr callee, Token paren, List<Expr> arguments) implements Expr {
+        @Override
+        public <R> R accept(Visitor<R> visitor) {
+            return visitor.VisitCallExpr(this);
         }
     }
 
