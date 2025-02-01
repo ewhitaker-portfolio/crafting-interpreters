@@ -60,6 +60,16 @@ public class Evaluator implements Expr.Visitor<Object>, Stmt.Visitor<Void> {
     }
 
     @Override
+    public Void VisitIfStmt(Stmt.If stmt) {
+        if (this.isTruthy(this.evaluate(stmt.condition()))) {
+            this.execute(stmt.thenBranch());
+        } else if (stmt.elseBranch() != null) {
+            this.execute(stmt.elseBranch());
+        }
+        return null;
+    }
+
+    @Override
     public Void VisitPrintStmt(Stmt.Print stmt) {
         Object value = this.evaluate(stmt.expression());
         System.out.println(this.stringify(value));
@@ -74,6 +84,14 @@ public class Evaluator implements Expr.Visitor<Object>, Stmt.Visitor<Void> {
         }
 
         this.environment.Define(stmt.name().lexeme(), value);
+        return null;
+    }
+
+    @Override
+    public Void VisitWhileStmt(Stmt.While stmt) {
+        while (this.isTruthy(this.evaluate(stmt.condition()))) {
+            this.execute(stmt.body());
+        }
         return null;
     }
 
@@ -143,6 +161,23 @@ public class Evaluator implements Expr.Visitor<Object>, Stmt.Visitor<Void> {
     @Override
     public Object VisitLiteralExpr(Expr.Literal expr) {
         return expr.value();
+    }
+
+    @Override
+    public Object VisitLogicalExpr(Expr.Logical expr) {
+        Object left = this.evaluate(expr.left());
+
+        if (expr.operator().type() == TokenType.OR) {
+            if (this.isTruthy(left)) {
+                return left;
+            }
+        } else {
+            if (!this.isTruthy(left)) {
+                return left;
+            }
+        }
+
+        return this.evaluate(expr.right());
     }
 
     @Override

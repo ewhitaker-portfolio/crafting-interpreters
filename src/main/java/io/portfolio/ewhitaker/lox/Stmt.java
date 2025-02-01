@@ -8,9 +8,13 @@ public interface Stmt {
 
         R VisitExpressionStmt(Expression stmt);
 
+        R VisitIfStmt(If stmt);
+
         R VisitPrintStmt(Print stmt);
 
         R VisitVarStmt(Var stmt);
+
+        R VisitWhileStmt(While stmt);
     }
 
     public record Block(List<Stmt> statements) implements Stmt {
@@ -27,6 +31,13 @@ public interface Stmt {
         }
     }
 
+    public record If(Expr condition, Stmt thenBranch, Stmt elseBranch) implements Stmt {
+        @Override
+        public <R> R accept(Visitor<R> visitor) {
+            return visitor.VisitIfStmt(this);
+        }
+    }
+
     public record Print(Expr expression) implements Stmt {
         @Override
         public <R> R accept(Visitor<R> visitor) {
@@ -38,6 +49,13 @@ public interface Stmt {
         @Override
         public <R> R accept(Visitor<R> visitor) {
             return visitor.VisitVarStmt(this);
+        }
+    }
+
+    public record While(Expr condition, Stmt body) implements Stmt {
+        @Override
+        public <R> R accept(Visitor<R> visitor) {
+            return visitor.VisitWhileStmt(this);
         }
     }
 

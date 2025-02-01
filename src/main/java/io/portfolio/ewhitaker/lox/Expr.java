@@ -12,6 +12,8 @@ public interface Expr {
 
         R VisitLiteralExpr(Literal expr);
 
+        R VisitLogicalExpr(Logical expr);
+
         R VisitUnaryExpr(Unary expr);
 
         R VisitVariableExpr(Variable expr);
@@ -42,6 +44,13 @@ public interface Expr {
         @Override
         public <R> R accept(Visitor<R> visitor) {
             return visitor.VisitLiteralExpr(this);
+        }
+    }
+
+    public record Logical(Expr left, Token operator, Expr right) implements Expr {
+        @Override
+        public <R> R accept(Visitor<R> visitor) {
+            return visitor.VisitLogicalExpr(this);
         }
     }
 

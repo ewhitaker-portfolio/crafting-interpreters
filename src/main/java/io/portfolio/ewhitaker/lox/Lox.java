@@ -59,14 +59,13 @@ public class Lox {
     private static void run(String source) {
         Lexer lexer = new Lexer(source);
         List<Token> tokens = lexer.ScanTokens();
-
 //@formatter:off Parsing Expressions
+//
 //      // For now, just print the tokens.
 //      for (Token token : tokens) {
 //          System.out.println(token);
 //      }
 //@formatter:on
-
         Parser parser = new Parser(tokens);
 //@formatter:off Statements and State
 //      Expr expression = parser.parse();
@@ -80,6 +79,10 @@ public class Lox {
 
 //@formatter:off Evaluating Expressions
 //      System.out.println(new AstPrinter().print(expression));
+//@formatter:on
+
+//@formatter:off Statements and State
+//      evaluator.Evaluate(expression);
 //@formatter:on
         evaluator.Evaluate(statements);
     }
