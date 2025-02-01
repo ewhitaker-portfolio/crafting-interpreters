@@ -6,6 +6,8 @@ public interface Stmt {
     public interface Visitor<R> {
         R VisitBlockStmt(Block stmt);
 
+        R VisitClassStmt(Class stmt);
+
         R VisitExpressionStmt(Expression stmt);
 
         R VisitFunctionStmt(Function stmt);
@@ -25,6 +27,13 @@ public interface Stmt {
         @Override
         public <R> R accept(Visitor<R> visitor) {
             return visitor.VisitBlockStmt(this);
+        }
+    }
+
+    public record Class(Token name, List<Stmt.Function> methods) implements Stmt {
+        @Override
+        public <R> R accept(Visitor<R> visitor) {
+            return visitor.VisitClassStmt(this);
         }
     }
 

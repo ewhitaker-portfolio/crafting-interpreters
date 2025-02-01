@@ -1,7 +1,6 @@
 package io.portfolio.ewhitaker.lox;
 
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.List;
 
 public class Parser {
@@ -43,6 +42,10 @@ public class Parser {
 
     private Stmt declaration() {
         try {
+            if (this.match(TokenType.CLASS)) {
+                return this.classDeclaration();
+            }
+
             if (this.match(TokenType.FUN)) {
                 return this.function("function");
             }
@@ -56,6 +59,20 @@ public class Parser {
             this.synchronize();
             return null;
         }
+    }
+
+    private Stmt classDeclaration() {
+        Token name = this.consume(TokenType.IDENTIFIER, "Expect class name.");
+        this.consume(TokenType.LEFT_BRACE, "Expect '{' before class body.");
+
+        List<Stmt.Function> methods = new ArrayList<>();
+        while (!this.check(TokenType.RIGHT_BRACE) && !this.isAtEnd()) {
+            methods.add(this.function("method"));
+        }
+
+        this.consume(TokenType.RIGHT_BRACE, "Expect '}' after class body.");
+
+        return new Stmt.Class(name, methods);
     }
 
     private Stmt statement() {
@@ -228,9 +245,11 @@ public class Parser {
             Token equals = this.previous();
             Expr value = this.assignment();
 
-            if (expr instanceof Expr.Variable var) {
-                Token name = var.name();
+            if (expr instanceof Expr.Variable variable) {
+                Token name = variable.name();
                 return new Expr.Assign(name, value);
+            } else if (expr instanceof Expr.Get get) {
+                return new Expr.Set(get.object(), get.name(), value);
             }
 
             error(equals, "Invalid assignment target.");
@@ -346,6 +365,9 @@ public class Parser {
         while (true) {
             if (this.match(TokenType.LEFT_PAREN)) {
                 expr = this.finishCall(expr);
+            } else if (this.match(TokenType.DOT)) {
+                Token name = this.consume(TokenType.IDENTIFIER, "Expect property name after '.'.");
+                expr = new Expr.Get(expr, name);
             } else {
                 break;
             }
@@ -369,6 +391,10 @@ public class Parser {
 
         if (this.match(TokenType.NUMBER, TokenType.STRING)) {
             return new Expr.Literal(this.previous().literal());
+        }
+
+        if (this.match(TokenType.THIS)) {
+            return new Expr.This(this.previous());
         }
 
         if (this.match(TokenType.IDENTIFIER)) {

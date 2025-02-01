@@ -10,11 +10,17 @@ public interface Expr {
 
         R VisitCallExpr(Call expr);
 
+        R VisitGetExpr(Get expr);
+
         R VisitGroupingExpr(Grouping expr);
 
         R VisitLiteralExpr(Literal expr);
 
         R VisitLogicalExpr(Logical expr);
+
+        R VisitSetExpr(Set expr);
+
+        R VisitThisExpr(This expr);
 
         R VisitUnaryExpr(Unary expr);
 
@@ -42,6 +48,13 @@ public interface Expr {
         }
     }
 
+    public record Get(Expr object, Token name) implements Expr {
+        @Override
+        public <R> R accept(Visitor<R> visitor) {
+            return visitor.VisitGetExpr(this);
+        }
+    }
+
     public record Grouping(Expr expression) implements Expr {
         @Override
         public <R> R accept(Visitor<R> visitor) {
@@ -60,6 +73,20 @@ public interface Expr {
         @Override
         public <R> R accept(Visitor<R> visitor) {
             return visitor.VisitLogicalExpr(this);
+        }
+    }
+
+    public record Set(Expr object, Token name, Expr value) implements Expr {
+        @Override
+        public <R> R accept(Visitor<R> visitor) {
+            return visitor.VisitSetExpr(this);
+        }
+    }
+
+    public record This(Token keyword) implements Expr {
+        @Override
+        public <R> R accept(Visitor<R> visitor) {
+            return visitor.VisitThisExpr(this);
         }
     }
 
