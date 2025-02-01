@@ -2,96 +2,96 @@ package io.portfolio.ewhitaker.tool;
 
 import java.io.IOException;
 import java.io.PrintWriter;
-import java.nio.charset.Charset;
-import java.nio.file.Paths;
-import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
-import java.util.Objects;
 
 import io.portfolio.ewhitaker.Main;
 
 public class GenerateAst {
-    public static final String working = System.getProperty("user.dir");
+    public static void main(String[] args) throws IOException {
+        if (args.length != 1) {
+            System.err.println("Usage: generate_ast <output directory>");
+            System.exit(Main.EXIT_USAGE);
+        }
+        String outputDir = args[0];
+        defineAst(
+                outputDir, "Expr", Arrays.asList(
+                        "Assign   : Token name, Expr value",
+                        "Binary   : Expr left, Token operator, Expr right",
+                        "Grouping : Expr expression",
+                        "Literal  : Object value",
+                        "Unary    : Token operator, Expr right",
+                        "Variable : Token name"
+                )
+        );
 
-    public static final List<String> expression = new ArrayList<>();
-
-    static {
-        expression.add("Literal  : Token kind, Object value");
-        expression.add("Ternary  : Expr left, Expr middle, Expr right");
-        expression.add("Binary   : Expr left, Token operator, Expr right");
-        expression.add("Unary    : Token operator, Expr right");
-        expression.add("Illegal  : Token from, Token to");
+        defineAst(
+                outputDir, "Stmt", Arrays.asList(
+                        "Block      : List<Stmt statements",
+                        "Expression : Expr expression",
+                        "Print      : Expr expression",
+                        "Var        : Token name, Expr initializer"
+                )
+        );
     }
 
-    public static int defineAst(String outputDir, String baseName, List<String> types) {
+    private static void defineAst(String outputDir, String baseName, List<String> types) throws IOException {
         String path = outputDir + "/" + baseName + ".java";
-        if (path.charAt(0) != '/') {
-            path = Paths.get(working).resolve(path).normalize().toString();
-        }
+        PrintWriter writer = new PrintWriter(path, "UTF-8");
 
-        try (PrintWriter writer = new PrintWriter(path, Charset.defaultCharset())) {
-            defineBaseAstNode(writer, path, baseName, types);
-        } catch (IOException e) {
-            e.printStackTrace(System.err);
-            return Main.EXIT_IO_FAILURE;
-        }
-
-        return Main.EXIT_SUCCESS;
-    }
-
-    public static void defineBaseAstNode(PrintWriter writer, String path, String baseName, List<String> types) {
-        String[] parts = path.split("/");
-        StringBuilder packages = new StringBuilder();
-        for (int i = parts.length - 2; i >= 0; --i) {
-            if (Objects.equals(parts[i], "java")) {
-                break;
-            }
-            packages.insert(0, parts[i] + ".");
-        }
-        packages.setCharAt(packages.length() - 1, ';');
-
-        writer.println("package " + packages);
+        writer.println("package io.portfolio.ewhitaker.lox;");
         writer.println();
         writer.println("import java.util.List;");
         writer.println();
-        writer.println("public sealed interface " + baseName + " extends Node {");
+        writer.println("public interface " + baseName + " {");
 
         defineVisitor(writer, baseName, types);
 
         // The AST classes.
-        for (String type : types) {
-            String[] split = type.split(":");
-            defineAstNode(writer, baseName, split[0].trim(), split[1].trim());
-            writer.println();
+        writer.println();
+        for (int i = 0; i < types.size(); ++i) {
+            String type = types.get(i);
+            String className = type.split(":")[0].trim();
+            String fields = type.split(":")[1].trim();
+            defineType(writer, baseName, className, fields);
+            if (i + 1 < types.size()) {
+                writer.println();
+            }
         }
 
         // The base accept() method.
-        writer.println(indent("<R> R accept(Visitor<R> visitor);", 1));
+        writer.println();
+        writer.println("    <R> R accept(Visitor<R> visitor);");
+
         writer.println("}");
+        writer.close();
     }
 
-    public static void defineVisitor(PrintWriter writer, String baseName, List<String> types) {
-        writer.println(indent("public interface Visitor<R> {", 1));
+    private static void defineVisitor(PrintWriter writer, String baseName, List<String> types) {
+        writer.println("    public interface Visitor<R> {");
 
-        for (String type : types) {
-            String name = type.split(":")[0].trim();
-            writer.println(indent("R visit" + name + baseName + "(" + name + " " + baseName.toLowerCase() + ");", 2));
-            writer.println();
+        for (int i = 0; i < types.size(); ++i) {
+            String typeName = types.get(i).split(":")[0].trim();
+            writer.println(
+                    "        R Visit" + typeName + baseName + "(" + typeName + " " + baseName.toLowerCase() + ");"
+            );
+            if (i + 1 < types.size()) {
+                writer.println();
+            }
         }
 
-        writer.println(indent("}", 1));
+        writer.println("    }");
     }
 
-    public static void defineAstNode(PrintWriter writer, String baseName, String className, String fields) {
-        writer.println(indent("record " + className + "(" + fields + ") implements " + baseName + " {", 1));
-        writer.println(indent("@Override", 2));
-        writer.println(indent("public <R> R accept(Visitor<R> visitor) {", 2));
-        writer.println(indent("return visitor.visit" + className + baseName + "(this);", 3));
-        writer.println(indent("}", 2));
-        writer.println(indent("}", 1));
-    }
+    private static void defineType(PrintWriter writer, String baseName, String className, String fields) {
+        writer.println("    public record " + className + "(" + fields + ") implements " + baseName + " {");
 
-    public static String indent(String x, int c) {
-        return "   ".repeat(c) + x;
+        // Visitor pattern.
+        writer.println("        @Override");
+        writer.println("        public <R> R accept(Visitor<R> visitor) {");
+        writer.println("            return visitor.Visit" + className + baseName + "(this);");
+        writer.println("        }");
+
+        writer.println("    }");
     }
 }

@@ -6,108 +6,103 @@ import java.io.InputStreamReader;
 import java.nio.charset.Charset;
 import java.nio.file.Files;
 import java.nio.file.Paths;
+import java.util.List;
 
 import io.portfolio.ewhitaker.Main;
-import io.portfolio.ewhitaker.lox.evaluator.Evaluator;
-import io.portfolio.ewhitaker.lox.parser.Parser;
-import io.portfolio.ewhitaker.lox.parser.ast.Expr;
 
 public class Lox {
-    public static final Evaluator evaluator = new Evaluator();
+    private static final Evaluator evaluator = new Evaluator();
 
-    public static boolean hadCompiletimeError = false;
-    public static boolean hadRuntimeError = false;
+    public static boolean HadError = false;
+    public static boolean HadRuntimeError = false;
 
-    public static int start(String[] args) {
-        if (args.length == 1) {
-            return runFile(args[0]);
+    public static void main(String[] args) throws IOException {
+        if (args.length > 1) {
+            System.out.println("Usage: jlox [script]");
+            System.exit(Main.EXIT_USAGE);
+        } else if (args.length == 1) {
+            runFile(args[0]);
+        } else {
+            runPrompt();
         }
-
-        return runPrompt();
     }
 
-    public static int runFile(String path) {
-        byte[] bytes;
-        try {
-            bytes = Files.readAllBytes(Paths.get(path));
-        } catch (IOException e) {
-            e.printStackTrace(System.err);
-            return Main.EXIT_IO_FAILURE;
-        }
-
+    private static void runFile(String path) throws IOException {
+        byte[] bytes = Files.readAllBytes(Paths.get(path));
         run(new String(bytes, Charset.defaultCharset()));
 
         // Indicate an error in the exit code.
-        if (hadCompiletimeError) {
-            return Main.EXIT_DATA_FAILURE;
+        if (HadError) {
+            System.exit(Main.EXIT_DATA_ERROR);
         }
 
-        if (hadRuntimeError) {
-            return Main.EXIT_INTERNAL_FAILURE;
+        if (HadRuntimeError) {
+            System.exit(Main.EXIT_SOFTWARE);
         }
-
-        return Main.EXIT_SUCCESS;
     }
 
-    public static int runPrompt() {
+    private static void runPrompt() throws IOException {
         InputStreamReader input = new InputStreamReader(System.in);
         BufferedReader reader = new BufferedReader(input);
 
-        String line;
         for (;;) {
             System.out.print("> ");
-            try {
-                line = reader.readLine();
-            } catch (IOException e) {
-                e.printStackTrace(System.err);
-                return Main.EXIT_IO_FAILURE;
-            }
-
+            String line = reader.readLine();
             if (line == null) {
                 break;
             }
             run(line);
-            hadCompiletimeError = false;
+            HadError = false;
         }
-
-        return Main.EXIT_SUCCESS;
     }
 
-    public static void run(String input) {
-        final Source source = new Source(input, false);
-        final Parser parser = new Parser(source);
-        final Expr expression = parser.parse();
+    private static void run(String source) {
+        Lexer lexer = new Lexer(source);
+        List<Token> tokens = lexer.ScanTokens();
+
+//@formatter:off Parsing Expressions
+//      // For now, just print the tokens.
+//      for (Token token : tokens) {
+//          System.out.println(token);
+//      }
+//@formatter:on
+
+        Parser parser = new Parser(tokens);
+//@formatter:off Statements and State
+//      Expr expression = parser.parse();
+//@formatter:on
+        List<Stmt> statements = parser.parse();
 
         // Stop if there was a syntax error.
-        if (hadCompiletimeError) {
+        if (HadError) {
             return;
         }
 
-        evaluator.evaluate(source, expression);
+//@formatter:off Evaluating Expressions
+//      System.out.println(new AstPrinter().print(expression));
+//@formatter:on
+        evaluator.Evaluate(statements);
     }
 
-    public static void compiletimeError(Source source, Position position, String message) {
-        System.err.println("Error: " + message);
-        final String prefix = position.line() + " | ";
-        final String line;
-        if (position.line() - 1 == source.lines.size() - 1) {
-            line = source.input.substring(source.lines.get(position.line() - 1));
+    public static void Error(int line, String message) {
+        report(line, "", message);
+    }
+
+    private static void report(int line, String where, String message) {
+        System.err.println("[line " + line + "] Error" + where + ": " + message);
+        HadError = true;
+    }
+
+    public static void Error(Token token, String message) {
+        if (token.type() == TokenType.EOF) {
+            report(token.line(), " at end", message);
         } else {
-            line = source.input.substring(
-                    source.lines.get(position.line() - 1), source.lines.get(position.line()) - 1
-            );
+            report(token.line(), " at '" + token.lexeme() + "'", message);
         }
-        System.err.println("\t" + prefix + line);
-        final String spaces = " ".repeat((position.column() - 1) + prefix.length());
-        System.err.println("\t" + spaces + "^-- Here.");
-
-        hadCompiletimeError = true;
     }
 
-    // TODO: implement call stack
-    public static void runtimeError(Source source, Position position, String message) {
-        System.err.println(message + "\n[line " + position.line() + "]");
-
-        hadRuntimeError = true;
+    public static void RuntimeError(RuntimeError error) {
+        System.err.println(error.getMessage() + "\n[line " + error.token.line() + "]");
+        HadRuntimeError = true;
     }
 }
