@@ -3,9 +3,9 @@
 compile_commands.json
 
 # Maven #
-target/
-!**/src/main/**/target/
-!**/src/test/**/target/
+bin/
+!**/src/main/**/bin/
+!**/src/test/**/bin/
 
 # Eclipse #
 .settings/
