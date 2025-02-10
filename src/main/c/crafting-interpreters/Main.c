@@ -1,51 +1,29 @@
-#include <assert.h>
-#include <stdio.h>
 #include <stdlib.h>
+#include <stdio.h>
 
-#include "DoublyLinkedList.h"
+#include "Common.h"
+#include "Chunk.h"
+#include "Debug.h"
 
 #ifdef __cplusplus
 extern "C" {
 #endif
 
-void printDoublyLinkedNode(DoublyLinkedNode* node) {
-    if (node->next == NULL) {
-        fprintf(stdout, "%s\n", node->value);
-    } else {
-        fprintf(stdout, "%s <-> ", node->value);
-    }
-}
-
 int main(void) {
     setbuf(stdout, NULL);
     setbuf(stderr, NULL);
 
-    DoublyLinkedList* list = makeDoublyLinkedList();
-    traverseDoublyLinkedList(list, printDoublyLinkedNode);
+    Chunk chunk;
+    initChunk(&chunk);
 
-    insertDoublyLinkedNode(list, "first value");
-    traverseDoublyLinkedList(list, printDoublyLinkedNode);
-    insertDoublyLinkedNode(list, "second value");
-    insertDoublyLinkedNode(list, "third value");
-    traverseDoublyLinkedList(list, printDoublyLinkedNode);
+    int constant  = addConstant(&chunk, 1.2);
+    writeChunk(&chunk, OP_CONSTANT, 123);
+    writeChunk(&chunk, constant, 123);
 
-    assert(indexOfDoublyLinkedNode(list, "second value") == 1);
-    assert(indexOfDoublyLinkedNode(list, "fourth value") == -1);
+    writeChunk(&chunk, OP_RETURN, 123);
 
-    assert(removeDoublyLinkedNode(list, "second value") != NULL);
-    traverseDoublyLinkedList(list, printDoublyLinkedNode);
-    assert(removeDoublyLinkedNode(list, "first value") != NULL);
-    assert(removeDoublyLinkedNode(list, "fifth value") == NULL);
-    traverseDoublyLinkedList(list, printDoublyLinkedNode);
-
-    insertDoublyLinkedNode(list, "fourth value");
-    insertDoublyLinkedNode(list, "fifth value");
-    traverseDoublyLinkedList(list, printDoublyLinkedNode);
-    assert(removeDoublyLinkedNode(list, "fifth value") != NULL);
-    traverseDoublyLinkedList(list, printDoublyLinkedNode);
-
-    freeDoublyLinkedList(list);
-
+    disassembleChunk(&chunk, "test chunk");
+    freeChunk(&chunk);
     return EXIT_SUCCESS;
 }
 
