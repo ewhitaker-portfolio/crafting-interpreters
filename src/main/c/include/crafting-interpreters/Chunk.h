@@ -1,8 +1,7 @@
 #ifndef CRAFTING_INTERPRETERS_CHUNK_H
 #define CRAFTING_INTERPRETERS_CHUNK_H
 
-#include <stdint.h>
-
+#include "Common.h"
 #include "Value.h"
 
 #ifdef __cplusplus

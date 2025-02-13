@@ -1,8 +1,6 @@
 #ifndef CRAFTING_INTERPRETERS_VALUE_H
 #define CRAFTING_INTERPRETERS_VALUE_H
 
-#include "Common.h"
-
 #ifdef __cplusplus
 extern "C" {
 #endif

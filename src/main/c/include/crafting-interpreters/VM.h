@@ -2,7 +2,6 @@
 #define CRAFTING_INTERPRETERS_VM_H
 
 #include "Chunk.h"
-#include "Value.h"
 
 #ifdef __cplusplus
 extern "C" {
@@ -25,7 +24,7 @@ typedef enum {
 
 void initVM();
 void freeVM();
-InterpretResult interpret(Chunk* chunk);
+InterpretResult interpret(const char* source);
 void push(Value value);
 Value pop();
 
