@@ -9,6 +9,8 @@
 extern "C" {
 #endif
 
+#define DEBUG_TRACE_EXECUTION
+
 #ifdef __cplusplus
 }
 #endif

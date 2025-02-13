@@ -3,10 +3,10 @@ package io.portfolio.ewhitaker.lox;
 import java.util.List;
 
 public class LoxFunction implements LoxCallable {
-    private final Stmt.Function declaration;
-    private final Environment closure;
+    public final Stmt.Function declaration;
+    public final Environment closure;
 
-    private final boolean isInitializer;
+    public final boolean isInitializer;
 
     public LoxFunction(Stmt.Function declaration, Environment closure, boolean isInitializer) {
         this.isInitializer = isInitializer;
@@ -14,35 +14,35 @@ public class LoxFunction implements LoxCallable {
         this.declaration = declaration;
     }
 
-    public LoxFunction Bind(LoxInstance instance) {
+    public LoxFunction bind(LoxInstance instance) {
         Environment environment = new Environment(this.closure);
-        environment.Define("this", instance);
+        environment.define("this", instance);
         return new LoxFunction(declaration, environment, this.isInitializer);
     }
 
     @Override
-    public int Arity() {
+    public int arity() {
         return this.declaration.params().size();
     }
 
     @Override
-    public Object Call(Evaluator evaluator, List<Object> arguments) {
+    public Object call(Evaluator evaluator, List<Object> arguments) {
         Environment environment = new Environment(this.closure);
         for (int i = 0; i < this.declaration.params().size(); ++i) {
-            environment.Define(this.declaration.params().get(i).lexeme(), arguments.get(i));
+            environment.define(this.declaration.params().get(i).lexeme(), arguments.get(i));
         }
 
         try {
-            evaluator.ExecuteBlock(this.declaration.body(), environment);
+            evaluator.executeBlock(this.declaration.body(), environment);
         } catch (Return returnValue) {
             if (this.isInitializer) {
-                return this.closure.GetAt(0, "this");
+                return this.closure.getAt(0, "this");
             }
             return returnValue.Value;
         }
 
         if (this.isInitializer) {
-            return this.closure.GetAt(0, "this");
+            return this.closure.getAt(0, "this");
         }
 
         return null;

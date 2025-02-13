@@ -84,7 +84,7 @@ public class GenerateAst {
         for (int i = 0; i < types.size(); ++i) {
             String typeName = types.get(i).split(":")[0].trim();
             writer.println(
-                    "        R Visit" + typeName + baseName + "(" + typeName + " " + baseName.toLowerCase() + ");"
+                    "        R visit" + typeName + baseName + "(" + typeName + " " + baseName.toLowerCase() + ");"
             );
             if (i + 1 < types.size()) {
                 writer.println();
@@ -100,7 +100,7 @@ public class GenerateAst {
         // Visitor pattern.
         writer.println("        @Override");
         writer.println("        public <R> R accept(Visitor<R> visitor) {");
-        writer.println("            return visitor.Visit" + className + baseName + "(this);");
+        writer.println("            return visitor.visit" + className + baseName + "(this);");
         writer.println("        }");
 
         writer.println("    }");

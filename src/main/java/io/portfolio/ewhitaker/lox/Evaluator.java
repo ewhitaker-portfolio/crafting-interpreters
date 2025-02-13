@@ -6,33 +6,19 @@ import java.util.List;
 import java.util.Map;
 
 public class Evaluator implements Expr.Visitor<Object>, Stmt.Visitor<Void> {
-    public Environment Globals = new Environment();
-//@formatter:off Functions
-//  private Environment environment = new Environment();
-//@formatter:on
-    private Environment environment = Globals;
-    private final Map<Expr, Integer> locals = new HashMap<>();
-
-//@formatter:off Statements and State
-//  public void Evaluate(Expr expression) {
-//      try {
-//          Object value = this.evaluate(expression);
-//          System.out.println(this.stringify(value));
-//      } catch (RuntimeError error) {
-//          Lox.RuntimeError(error);
-//      }
-//  }
-//@formatter:on
+    public Environment globals = new Environment();
+    public Environment environment = globals;
+    public final Map<Expr, Integer> locals = new HashMap<>();
 
     public Evaluator() {
-        Globals.Define("clock", new LoxCallable() {
+        globals.define("clock", new LoxCallable() {
             @Override
-            public int Arity() {
+            public int arity() {
                 return 0;
             }
 
             @Override
-            public Object Call(Evaluator evaluator, List<Object> arguments) {
+            public Object call(Evaluator evaluator, List<Object> arguments) {
                 return System.currentTimeMillis() / 1000.0;
             }
 
@@ -43,29 +29,29 @@ public class Evaluator implements Expr.Visitor<Object>, Stmt.Visitor<Void> {
         });
     }
 
-    public void Evaluate(List<Stmt> statements) {
+    public void evaluate(List<Stmt> statements) {
         try {
             for (Stmt statement : statements) {
                 this.evaluate(statement);
             }
         } catch (RuntimeError error) {
-            Lox.RuntimeError(error);
+            Lox.runtimeError(error);
         }
     }
 
-    private void evaluate(Stmt stmt) {
+    public void evaluate(Stmt stmt) {
         stmt.accept(this);
     }
 
-    private Object evaluate(Expr expr) {
+    public Object evaluate(Expr expr) {
         return expr.accept(this);
     }
 
-    public void Resolve(Expr expr, int depth) {
+    public void resolve(Expr expr, int depth) {
         this.locals.put(expr, depth);
     }
 
-    public void ExecuteBlock(List<Stmt> statements, Environment environment) {
+    public void executeBlock(List<Stmt> statements, Environment environment) {
         Environment previous = this.environment;
         try {
             this.environment = environment;
@@ -79,13 +65,13 @@ public class Evaluator implements Expr.Visitor<Object>, Stmt.Visitor<Void> {
     }
 
     @Override
-    public Void VisitBlockStmt(Stmt.Block stmt) {
-        this.ExecuteBlock(stmt.statements(), new Environment(this.environment));
+    public Void visitBlockStmt(Stmt.Block stmt) {
+        this.executeBlock(stmt.statements(), new Environment(this.environment));
         return null;
     }
 
     @Override
-    public Void VisitClassStmt(Stmt.Class stmt) {
+    public Void visitClassStmt(Stmt.Class stmt) {
         Object superclass = null;
         if (stmt.superclass() != null) {
             superclass = this.evaluate(stmt.superclass());
@@ -94,11 +80,11 @@ public class Evaluator implements Expr.Visitor<Object>, Stmt.Visitor<Void> {
             }
         }
 
-        this.environment.Define(stmt.name().lexeme(), null);
+        this.environment.define(stmt.name().lexeme(), null);
 
         if (stmt.superclass() != null) {
             this.environment = new Environment(this.environment);
-            this.environment.Define("super", superclass);
+            this.environment.define("super", superclass);
         }
 
         Map<String, LoxFunction> methods = new HashMap<>();
@@ -107,37 +93,31 @@ public class Evaluator implements Expr.Visitor<Object>, Stmt.Visitor<Void> {
             methods.put(method.name().lexeme(), function);
         }
 
-//@formatter:off Inheritance
-//      LoxClass klass = new LoxClass(stmt.name().lexeme(), methods);
-//@formatter:on
         LoxClass klass = new LoxClass(stmt.name().lexeme(), (LoxClass) superclass, methods);
 
         if (superclass != null) {
-            this.environment = this.environment.Enclosing;
+            this.environment = this.environment.enclosing;
         }
 
-        this.environment.Assign(stmt.name(), klass);
+        this.environment.assign(stmt.name(), klass);
         return null;
     }
 
     @Override
-    public Void VisitExpressionStmt(Stmt.Expression stmt) {
+    public Void visitExpressionStmt(Stmt.Expression stmt) {
         this.evaluate(stmt.expression());
         return null;
     }
 
     @Override
-    public Void VisitFunctionStmt(Stmt.Function stmt) {
-//@formatter:off Classes
-//      LoxFunction function = new LoxFunction(stmt, this.environment);
-//@formatter:on
+    public Void visitFunctionStmt(Stmt.Function stmt) {
         LoxFunction function = new LoxFunction(stmt, this.environment, false);
-        this.environment.Define(stmt.name().lexeme(), function);
+        this.environment.define(stmt.name().lexeme(), function);
         return null;
     }
 
     @Override
-    public Void VisitIfStmt(Stmt.If stmt) {
+    public Void visitIfStmt(Stmt.If stmt) {
         if (this.isTruthy(this.evaluate(stmt.condition()))) {
             this.evaluate(stmt.thenBranch());
         } else if (stmt.elseBranch() != null) {
@@ -147,14 +127,14 @@ public class Evaluator implements Expr.Visitor<Object>, Stmt.Visitor<Void> {
     }
 
     @Override
-    public Void VisitPrintStmt(Stmt.Print stmt) {
+    public Void visitPrintStmt(Stmt.Print stmt) {
         Object value = this.evaluate(stmt.expression());
         System.out.println(this.stringify(value));
         return null;
     }
 
     @Override
-    public Void VisitReturnStmt(Stmt.Return stmt) {
+    public Void visitReturnStmt(Stmt.Return stmt) {
         Object value = null;
         if (stmt.value() != null) {
             value = this.evaluate(stmt.value());
@@ -164,18 +144,18 @@ public class Evaluator implements Expr.Visitor<Object>, Stmt.Visitor<Void> {
     }
 
     @Override
-    public Void VisitVarStmt(Stmt.Var stmt) {
+    public Void visitVarStmt(Stmt.Var stmt) {
         Object value = null;
         if (stmt.initializer() != null) {
             value = this.evaluate(stmt.initializer());
         }
 
-        this.environment.Define(stmt.name().lexeme(), value);
+        this.environment.define(stmt.name().lexeme(), value);
         return null;
     }
 
     @Override
-    public Void VisitWhileStmt(Stmt.While stmt) {
+    public Void visitWhileStmt(Stmt.While stmt) {
         while (this.isTruthy(this.evaluate(stmt.condition()))) {
             this.evaluate(stmt.body());
         }
@@ -183,24 +163,21 @@ public class Evaluator implements Expr.Visitor<Object>, Stmt.Visitor<Void> {
     }
 
     @Override
-    public Object VisitAssignExpr(Expr.Assign expr) {
+    public Object visitAssignExpr(Expr.Assign expr) {
         Object value = this.evaluate(expr.value());
-//@formatter:off Resolving and Binding
-//      this.environment.Assign(expr.name(), value);
-//@formatter:on
 
         Integer distance = this.locals.get(expr);
         if (distance != null) {
-            this.environment.AssignAt(distance, expr.name(), value);
+            this.environment.assignAt(distance, expr.name(), value);
         } else {
-            this.Globals.Assign(expr.name(), value);
+            this.globals.assign(expr.name(), value);
         }
 
         return value;
     }
 
     @Override
-    public Object VisitBinaryExpr(Expr.Binary expr) {
+    public Object visitBinaryExpr(Expr.Binary expr) {
         Object left = this.evaluate(expr.left());
         Object right = this.evaluate(expr.right());
 
@@ -251,7 +228,7 @@ public class Evaluator implements Expr.Visitor<Object>, Stmt.Visitor<Void> {
     }
 
     @Override
-    public Object VisitCallExpr(Expr.Call expr) {
+    public Object visitCallExpr(Expr.Call expr) {
         Object callee = this.evaluate(expr.callee());
 
         List<Object> arguments = new ArrayList<>();
@@ -263,37 +240,37 @@ public class Evaluator implements Expr.Visitor<Object>, Stmt.Visitor<Void> {
             throw new RuntimeError(expr.paren(), "Can only call functions and classes.");
         }
 
-        if (arguments.size() != function.Arity()) {
+        if (arguments.size() != function.arity()) {
             throw new RuntimeError(
-                    expr.paren(), "Expected " + function.Arity() + "  arguments but got " + arguments.size() + "."
+                    expr.paren(), "Expected " + function.arity() + "  arguments but got " + arguments.size() + "."
             );
         }
 
-        return function.Call(this, arguments);
+        return function.call(this, arguments);
     }
 
     @Override
-    public Object VisitGetExpr(Expr.Get expr) {
+    public Object visitGetExpr(Expr.Get expr) {
         Object object = this.evaluate(expr.object());
         if (object instanceof LoxInstance instance) {
-            return instance.Get(expr.name());
+            return instance.get(expr.name());
         }
 
         throw new RuntimeError(expr.name(), "Only instances have properties.");
     }
 
     @Override
-    public Object VisitGroupingExpr(Expr.Grouping expr) {
+    public Object visitGroupingExpr(Expr.Grouping expr) {
         return this.evaluate(expr.expression());
     }
 
     @Override
-    public Object VisitLiteralExpr(Expr.Literal expr) {
+    public Object visitLiteralExpr(Expr.Literal expr) {
         return expr.value();
     }
 
     @Override
-    public Object VisitLogicalExpr(Expr.Logical expr) {
+    public Object visitLogicalExpr(Expr.Logical expr) {
         Object left = this.evaluate(expr.left());
 
         if (expr.operator().type() == TokenType.OR) {
@@ -310,7 +287,7 @@ public class Evaluator implements Expr.Visitor<Object>, Stmt.Visitor<Void> {
     }
 
     @Override
-    public Object VisitSetExpr(Expr.Set expr) {
+    public Object visitSetExpr(Expr.Set expr) {
         Object object = this.evaluate(expr.object());
 
         if (!(object instanceof LoxInstance instance)) {
@@ -318,33 +295,33 @@ public class Evaluator implements Expr.Visitor<Object>, Stmt.Visitor<Void> {
         }
 
         Object value = this.evaluate(expr.value());
-        instance.Set(expr.name(), value);
+        instance.set(expr.name(), value);
         return value;
     }
 
     @Override
-    public Object VisitSuperExpr(Expr.Super expr) {
+    public Object visitSuperExpr(Expr.Super expr) {
         int distance = this.locals.get(expr);
-        LoxClass superclass = (LoxClass) this.environment.GetAt(distance, "super");
+        LoxClass superclass = (LoxClass) this.environment.getAt(distance, "super");
 
-        LoxInstance object = (LoxInstance) this.environment.GetAt(distance - 1, "this");
+        LoxInstance object = (LoxInstance) this.environment.getAt(distance - 1, "this");
 
-        LoxFunction method = superclass.FindMethod(expr.method().lexeme());
+        LoxFunction method = superclass.findMethod(expr.method().lexeme());
 
         if (method == null) {
             throw new RuntimeError(expr.method(), "Undefined property '" + expr.method().lexeme() + "'.");
         }
 
-        return method.Bind(object);
+        return method.bind(object);
     }
 
     @Override
-    public Object VisitThisExpr(Expr.This expr) {
+    public Object visitThisExpr(Expr.This expr) {
         return lookUpVariable(expr.keyword(), expr);
     }
 
     @Override
-    public Object VisitUnaryExpr(Expr.Unary expr) {
+    public Object visitUnaryExpr(Expr.Unary expr) {
         Object right = this.evaluate(expr.right());
 
         return switch (expr.operator().type()) {
@@ -358,23 +335,20 @@ public class Evaluator implements Expr.Visitor<Object>, Stmt.Visitor<Void> {
     }
 
     @Override
-    public Object VisitVariableExpr(Expr.Variable expr) {
-//@formatter:off Resolving and Binding
-//      return this.environment.Get(expr.name());
-//@formatter:on
+    public Object visitVariableExpr(Expr.Variable expr) {
         return lookUpVariable(expr.name(), expr);
     }
 
-    private Object lookUpVariable(Token name, Expr expr) {
+    public Object lookUpVariable(Token name, Expr expr) {
         Integer distance = this.locals.get(expr);
         if (distance != null) {
-            return this.environment.GetAt(distance, name.lexeme());
+            return this.environment.getAt(distance, name.lexeme());
         } else {
-            return this.Globals.Get(name);
+            return this.globals.get(name);
         }
     }
 
-    private void checkNumberOperand(Token operator, Object operand) {
+    public void checkNumberOperand(Token operator, Object operand) {
         if (operand instanceof Double) {
             return;
         }
@@ -382,7 +356,7 @@ public class Evaluator implements Expr.Visitor<Object>, Stmt.Visitor<Void> {
         throw new RuntimeError(operator, "Operand must be a number.");
     }
 
-    private void checkNumberOperands(Token operator, Object left, Object right) {
+    public void checkNumberOperands(Token operator, Object left, Object right) {
         if (left instanceof Double && right instanceof Double) {
             return;
         }
@@ -390,7 +364,7 @@ public class Evaluator implements Expr.Visitor<Object>, Stmt.Visitor<Void> {
         throw new RuntimeError(operator, "Operands must be a numbers.");
     }
 
-    private boolean isTruthy(Object object) {
+    public boolean isTruthy(Object object) {
         if (object == null) {
             return false;
         }
@@ -402,7 +376,7 @@ public class Evaluator implements Expr.Visitor<Object>, Stmt.Visitor<Void> {
         return true;
     }
 
-    private boolean isEqual(Object a, Object b) {
+    public boolean isEqual(Object a, Object b) {
         if (a == null && b == null) {
             return true;
         }
@@ -414,7 +388,7 @@ public class Evaluator implements Expr.Visitor<Object>, Stmt.Visitor<Void> {
         return a.equals(b);
     }
 
-    private String stringify(Object object) {
+    public String stringify(Object object) {
         if (object == null) {
             return "nil";
         }

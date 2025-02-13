@@ -4,85 +4,85 @@ import java.util.List;
 
 public interface Stmt {
     public interface Visitor<R> {
-        R VisitBlockStmt(Block stmt);
+        R visitBlockStmt(Block stmt);
 
-        R VisitClassStmt(Class stmt);
+        R visitClassStmt(Class stmt);
 
-        R VisitExpressionStmt(Expression stmt);
+        R visitExpressionStmt(Expression stmt);
 
-        R VisitFunctionStmt(Function stmt);
+        R visitFunctionStmt(Function stmt);
 
-        R VisitIfStmt(If stmt);
+        R visitIfStmt(If stmt);
 
-        R VisitPrintStmt(Print stmt);
+        R visitPrintStmt(Print stmt);
 
-        R VisitReturnStmt(Return stmt);
+        R visitReturnStmt(Return stmt);
 
-        R VisitVarStmt(Var stmt);
+        R visitVarStmt(Var stmt);
 
-        R VisitWhileStmt(While stmt);
+        R visitWhileStmt(While stmt);
     }
 
     public record Block(List<Stmt> statements) implements Stmt {
         @Override
         public <R> R accept(Visitor<R> visitor) {
-            return visitor.VisitBlockStmt(this);
+            return visitor.visitBlockStmt(this);
         }
     }
 
     public record Class(Token name, Expr.Variable superclass, List<Stmt.Function> methods) implements Stmt {
         @Override
         public <R> R accept(Visitor<R> visitor) {
-            return visitor.VisitClassStmt(this);
+            return visitor.visitClassStmt(this);
         }
     }
 
     public record Expression(Expr expression) implements Stmt {
         @Override
         public <R> R accept(Visitor<R> visitor) {
-            return visitor.VisitExpressionStmt(this);
+            return visitor.visitExpressionStmt(this);
         }
     }
 
     public record Function(Token name, List<Token> params, List<Stmt> body) implements Stmt {
         @Override
         public <R> R accept(Visitor<R> visitor) {
-            return visitor.VisitFunctionStmt(this);
+            return visitor.visitFunctionStmt(this);
         }
     }
 
     public record If(Expr condition, Stmt thenBranch, Stmt elseBranch) implements Stmt {
         @Override
         public <R> R accept(Visitor<R> visitor) {
-            return visitor.VisitIfStmt(this);
+            return visitor.visitIfStmt(this);
         }
     }
 
     public record Print(Expr expression) implements Stmt {
         @Override
         public <R> R accept(Visitor<R> visitor) {
-            return visitor.VisitPrintStmt(this);
+            return visitor.visitPrintStmt(this);
         }
     }
 
     public record Return(Token keyword, Expr value) implements Stmt {
         @Override
         public <R> R accept(Visitor<R> visitor) {
-            return visitor.VisitReturnStmt(this);
+            return visitor.visitReturnStmt(this);
         }
     }
 
     public record Var(Token name, Expr initializer) implements Stmt {
         @Override
         public <R> R accept(Visitor<R> visitor) {
-            return visitor.VisitVarStmt(this);
+            return visitor.visitVarStmt(this);
         }
     }
 
     public record While(Expr condition, Stmt body) implements Stmt {
         @Override
         public <R> R accept(Visitor<R> visitor) {
-            return visitor.VisitWhileStmt(this);
+            return visitor.visitWhileStmt(this);
         }
     }
 

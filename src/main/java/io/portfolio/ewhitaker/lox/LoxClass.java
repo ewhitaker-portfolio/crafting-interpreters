@@ -4,56 +4,49 @@ import java.util.List;
 import java.util.Map;
 
 public class LoxClass implements LoxCallable {
-    public final String Name;
-    public final LoxClass Superclass;
-    private final Map<String, LoxFunction> methods;
+    public final LoxClass superclass;
+    public final String name;
+    public final Map<String, LoxFunction> methods;
 
-//@formatter:off Inheritance
-//  public LoxClass(String Name, Map<String, LoxFunction> methods) {
-//      this.Name = Name;
-//      this.methods = methods;
-//  }
-//@formatter:on
-    //
-    public LoxClass(String Name, LoxClass Superclass, Map<String, LoxFunction> methods) {
-        this.Superclass = Superclass;
-        this.Name = Name;
+    public LoxClass(String name, LoxClass superclass, Map<String, LoxFunction> methods) {
+        this.superclass = superclass;
+        this.name = name;
         this.methods = methods;
     }
 
-    public LoxFunction FindMethod(String name) {
+    public LoxFunction findMethod(String name) {
         if (methods.containsKey(name)) {
             return methods.get(name);
         }
 
-        if (this.Superclass != null) {
-            return this.Superclass.FindMethod(name);
+        if (this.superclass != null) {
+            return this.superclass.findMethod(name);
         }
 
         return null;
     }
 
     @Override
-    public int Arity() {
-        LoxFunction initializer = this.FindMethod("init");
+    public int arity() {
+        LoxFunction initializer = this.findMethod("init");
         if (initializer == null) {
             return 0;
         }
-        return initializer.Arity();
+        return initializer.arity();
     }
 
     @Override
-    public Object Call(Evaluator evaluator, List<Object> arguments) {
+    public Object call(Evaluator evaluator, List<Object> arguments) {
         LoxInstance instance = new LoxInstance(this);
-        LoxFunction initializer = this.FindMethod("init");
+        LoxFunction initializer = this.findMethod("init");
         if (initializer != null) {
-            initializer.Bind(instance).Call(evaluator, arguments);
+            initializer.bind(instance).call(evaluator, arguments);
         }
         return instance;
     }
 
     @Override
     public String toString() {
-        return this.Name;
+        return this.name;
     }
 }

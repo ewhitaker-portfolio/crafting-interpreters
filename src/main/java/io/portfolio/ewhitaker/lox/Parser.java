@@ -4,25 +4,15 @@ import java.util.ArrayList;
 import java.util.List;
 
 public class Parser {
-    private static class ParserError extends RuntimeException {
+    public static class ParserError extends RuntimeException {
     }
 
-    private final List<Token> tokens;
-    private int current = 0;
+    public final List<Token> tokens;
+    public int current = 0;
 
     public Parser(List<Token> tokens) {
         this.tokens = tokens;
     }
-
-//@formatter:off Statements and State
-//  public Expr parse() {
-//      try {
-//          return this.expression();
-//      } catch (ParserError error) {
-//          return null;
-//      }
-//  }
-//@formatter:on
 
     public List<Stmt> parse() {
         List<Stmt> statements = new ArrayList<>();
@@ -33,14 +23,11 @@ public class Parser {
         return statements;
     }
 
-    private Expr expression() {
-//@formatter:off Statements and State
-//      return this.equality();
-//@formatter:on
+    public Expr expression() {
         return this.assignment();
     }
 
-    private Stmt declaration() {
+    public Stmt declaration() {
         try {
             if (this.match(TokenType.CLASS)) {
                 return this.classDeclaration();
@@ -61,7 +48,7 @@ public class Parser {
         }
     }
 
-    private Stmt classDeclaration() {
+    public Stmt classDeclaration() {
         Token name = this.consume(TokenType.IDENTIFIER, "Expect class name.");
 
         Expr.Variable superclass = null;
@@ -79,13 +66,10 @@ public class Parser {
 
         this.consume(TokenType.RIGHT_BRACE, "Expect '}' after class body.");
 
-//@formatter:off Inheritance
-//      return new Stmt.Class(name, methods);
-//@formatter:on
         return new Stmt.Class(name, superclass, methods);
     }
 
-    private Stmt statement() {
+    public Stmt statement() {
         if (this.match(TokenType.FOR)) {
             return forStatement();
         }
@@ -113,7 +97,7 @@ public class Parser {
         return this.expressionStatement();
     }
 
-    private Stmt forStatement() {
+    public Stmt forStatement() {
         this.consume(TokenType.LEFT_PAREN, "Expect '(' after 'for'.");
 
         Stmt initializer;
@@ -156,7 +140,7 @@ public class Parser {
         return body;
     }
 
-    private Stmt ifStatement() {
+    public Stmt ifStatement() {
         this.consume(TokenType.LEFT_PAREN, "Expect '(' after 'if'.");
         Expr condition = this.expression();
         this.consume(TokenType.RIGHT_PAREN, "Expect ')' after if condition.");
@@ -170,13 +154,13 @@ public class Parser {
         return new Stmt.If(condition, thenBranch, elseBranch);
     }
 
-    private Stmt printStatement() {
+    public Stmt printStatement() {
         Expr value = this.expression();
         this.consume(TokenType.SEMICOLON, "Expect ';' after value.");
         return new Stmt.Print(value);
     }
 
-    private Stmt returnStatement() {
+    public Stmt returnStatement() {
         Token keyword = this.previous();
         Expr value = null;
         if (!this.check(TokenType.SEMICOLON)) {
@@ -187,7 +171,7 @@ public class Parser {
         return new Stmt.Return(keyword, value);
     }
 
-    private Stmt varDeclaration() {
+    public Stmt varDeclaration() {
         Token name = this.consume(TokenType.IDENTIFIER, "Expect variable name.");
 
         Expr initializer = null;
@@ -199,7 +183,7 @@ public class Parser {
         return new Stmt.Var(name, initializer);
     }
 
-    private Stmt whileStatement() {
+    public Stmt whileStatement() {
         this.consume(TokenType.LEFT_PAREN, "Expect '(' after 'while'.");
         Expr condition = this.expression();
         this.consume(TokenType.RIGHT_PAREN, "Expect ')' after condition.");
@@ -208,13 +192,13 @@ public class Parser {
         return new Stmt.While(condition, body);
     }
 
-    private Stmt expressionStatement() {
+    public Stmt expressionStatement() {
         Expr expr = this.expression();
         this.consume(TokenType.SEMICOLON, "Expect ';' after expression.");
         return new Stmt.Expression(expr);
     }
 
-    private Stmt.Function function(String kind) {
+    public Stmt.Function function(String kind) {
         Token name = this.consume(TokenType.IDENTIFIER, "Expect " + kind + " name.");
         this.consume(TokenType.LEFT_PAREN, "Expect '(' after " + kind + " name.");
         List<Token> parameters = new ArrayList<>();
@@ -234,7 +218,7 @@ public class Parser {
         return new Stmt.Function(name, parameters, body);
     }
 
-    private List<Stmt> block() {
+    public List<Stmt> block() {
         List<Stmt> statements = new ArrayList<>();
 
         while (!this.check(TokenType.RIGHT_BRACE) && !this.isAtEnd()) {
@@ -245,10 +229,7 @@ public class Parser {
         return statements;
     }
 
-    private Expr assignment() {
-//@formatter:off Control Flow
-//      Expr expr = this.equality();
-//@formatter:on
+    public Expr assignment() {
         Expr expr = this.or();
 
         if (this.match(TokenType.EQUAL)) {
@@ -268,7 +249,7 @@ public class Parser {
         return expr;
     }
 
-    private Expr or() {
+    public Expr or() {
         Expr expr = this.and();
 
         while (this.match(TokenType.OR)) {
@@ -280,7 +261,7 @@ public class Parser {
         return expr;
     }
 
-    private Expr and() {
+    public Expr and() {
         Expr expr = this.equality();
 
         while (this.match(TokenType.AND)) {
@@ -292,7 +273,7 @@ public class Parser {
         return expr;
     }
 
-    private Expr equality() {
+    public Expr equality() {
         Expr expr = this.comparison();
 
         while (this.match(TokenType.BANG_EQUAL, TokenType.EQUAL_EQUAL)) {
@@ -304,7 +285,7 @@ public class Parser {
         return expr;
     }
 
-    private Expr comparison() {
+    public Expr comparison() {
         Expr expr = this.term();
 
         while (this.match(TokenType.GREATER, TokenType.GREATER_EQUAL, TokenType.LESS, TokenType.LESS_EQUAL)) {
@@ -316,7 +297,7 @@ public class Parser {
         return expr;
     }
 
-    private Expr term() {
+    public Expr term() {
         Expr expr = this.factor();
 
         while (this.match(TokenType.MINUS, TokenType.PLUS)) {
@@ -328,7 +309,7 @@ public class Parser {
         return expr;
     }
 
-    private Expr factor() {
+    public Expr factor() {
         Expr expr = this.unary();
 
         while (this.match(TokenType.SLASH, TokenType.STAR)) {
@@ -340,20 +321,17 @@ public class Parser {
         return expr;
     }
 
-    private Expr unary() {
+    public Expr unary() {
         if (this.match(TokenType.BANG, TokenType.MINUS)) {
             Token operator = this.previous();
             Expr right = this.unary();
             return new Expr.Unary(operator, right);
         }
 
-//@formatter:off Functions
-//      return this.primary();
-//@formatter:on
         return this.call();
     }
 
-    private Expr finishCall(Expr callee) {
+    public Expr finishCall(Expr callee) {
         List<Expr> arguments = new ArrayList<>();
         if (!this.check(TokenType.RIGHT_PAREN)) {
             do {
@@ -369,7 +347,7 @@ public class Parser {
         return new Expr.Call(callee, paren, arguments);
     }
 
-    private Expr call() {
+    public Expr call() {
         Expr expr = this.primary();
 
         while (true) {
@@ -386,7 +364,7 @@ public class Parser {
         return expr;
     }
 
-    private Expr primary() {
+    public Expr primary() {
         if (this.match(TokenType.FALSE)) {
             return new Expr.Literal(false);
         }
@@ -427,7 +405,7 @@ public class Parser {
         throw this.error(this.peek(), "Expect expression.");
     }
 
-    private boolean match(TokenType... types) {
+    public boolean match(TokenType... types) {
         for (TokenType type : types) {
             if (this.check(type)) {
                 this.advance();
@@ -437,7 +415,7 @@ public class Parser {
         return false;
     }
 
-    private Token consume(TokenType type, String message) {
+    public Token consume(TokenType type, String message) {
         if (this.check(type)) {
             return this.advance();
         }
@@ -445,38 +423,38 @@ public class Parser {
         throw this.error(this.peek(), message);
     }
 
-    private boolean check(TokenType type) {
+    public boolean check(TokenType type) {
         if (this.isAtEnd()) {
             return false;
         }
         return this.peek().type() == type;
     }
 
-    private Token advance() {
+    public Token advance() {
         if (!this.isAtEnd()) {
             this.current++;
         }
         return this.previous();
     }
 
-    private boolean isAtEnd() {
+    public boolean isAtEnd() {
         return this.peek().type() == TokenType.EOF;
     }
 
-    private Token peek() {
+    public Token peek() {
         return this.tokens.get(this.current);
     }
 
-    private Token previous() {
+    public Token previous() {
         return this.tokens.get(this.current - 1);
     }
 
-    private ParserError error(Token token, String message) {
-        Lox.Error(token, message);
+    public ParserError error(Token token, String message) {
+        Lox.error(token, message);
         return new ParserError();
     }
 
-    private void synchronize() {
+    public void synchronize() {
         this.advance();
 
         while (!this.isAtEnd()) {

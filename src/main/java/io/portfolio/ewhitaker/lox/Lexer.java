@@ -6,7 +6,7 @@ import java.util.List;
 import java.util.Map;
 
 public class Lexer {
-    private static final Map<String, TokenType> keywords;
+    public static final Map<String, TokenType> keywords;
 
     static {
         keywords = new HashMap<>();
@@ -28,17 +28,17 @@ public class Lexer {
         keywords.put("while", TokenType.WHILE);
     }
 
-    private final String source;
-    private final List<Token> tokens = new ArrayList<>();
-    private int start = 0;
-    private int current = 0;
-    private int line = 1;
+    public final String source;
+    public final List<Token> tokens = new ArrayList<>();
+    public int start = 0;
+    public int current = 0;
+    public int line = 1;
 
     public Lexer(String source) {
         this.source = source;
     }
 
-    public List<Token> ScanTokens() {
+    public List<Token> scanTokens() {
         while (!this.isAtEnd()) {
             // We are at the beginning of the next lexeme.
             this.start = this.current;
@@ -49,7 +49,7 @@ public class Lexer {
         return this.tokens;
     }
 
-    private void scanToken() {
+    public void scanToken() {
         char c = this.advance();
         switch (c) {
             case '(' -> this.addToken(TokenType.LEFT_PAREN);
@@ -91,13 +91,13 @@ public class Lexer {
                 } else if (this.isAlpha(c)) {
                     this.identifier();
                 } else {
-                    Lox.Error(this.line, "Unexpected character.");
+                    Lox.error(this.line, "Unexpected character.");
                 }
             }
         }
     }
 
-    private void identifier() {
+    public void identifier() {
         while (this.isAlphaNumeric(this.peek())) {
             this.advance();
         }
@@ -110,7 +110,7 @@ public class Lexer {
         this.addToken(type);
     }
 
-    private void number() {
+    public void number() {
         while (this.isDigit(this.peek())) {
             this.advance();
         }
@@ -128,7 +128,7 @@ public class Lexer {
         this.addToken(TokenType.NUMBER, Double.parseDouble(this.source.substring(this.start, this.current)));
     }
 
-    private void string() {
+    public void string() {
         while (this.peek() != '"' && !this.isAtEnd()) {
             if (this.peek() == '\n') {
                 ++this.line;
@@ -137,7 +137,7 @@ public class Lexer {
         }
 
         if (this.isAtEnd()) {
-            Lox.Error(this.line, "Unterminated string.");
+            Lox.error(this.line, "Unterminated string.");
             return;
         }
 
@@ -149,7 +149,7 @@ public class Lexer {
         this.addToken(TokenType.STRING, value);
     }
 
-    private boolean match(char expected) {
+    public boolean match(char expected) {
         if (this.isAtEnd()) {
             return false;
         }
@@ -162,7 +162,7 @@ public class Lexer {
         return true;
     }
 
-    private char peek() {
+    public char peek() {
         if (this.isAtEnd()) {
             return '\0';
         }
@@ -176,33 +176,33 @@ public class Lexer {
         return this.source.charAt(this.current + 1);
     }
 
-    private boolean isAlpha(char c) {
+    public boolean isAlpha(char c) {
         return (c >= 'a' && c <= 'z') ||
                 (c >= 'A' && c <= 'Z') ||
                 c == '_';
     }
 
-    private boolean isAlphaNumeric(char c) {
+    public boolean isAlphaNumeric(char c) {
         return this.isAlpha(c) || this.isDigit(c);
     }
 
-    private boolean isDigit(char c) {
+    public boolean isDigit(char c) {
         return c >= '0' && c <= '9';
     }
 
-    private boolean isAtEnd() {
+    public boolean isAtEnd() {
         return this.current >= this.source.length();
     }
 
-    private char advance() {
+    public char advance() {
         return this.source.charAt(this.current++);
     }
 
-    private void addToken(TokenType type) {
+    public void addToken(TokenType type) {
         this.addToken(type, null);
     }
 
-    private void addToken(TokenType type, Object literal) {
+    public void addToken(TokenType type, Object literal) {
         String text = this.source.substring(this.start, this.current);
         this.tokens.add(new Token(type, text, literal, line));
     }

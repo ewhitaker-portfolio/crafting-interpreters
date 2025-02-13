@@ -11,10 +11,10 @@ import java.util.List;
 import io.portfolio.ewhitaker.Main;
 
 public class Lox {
-    private static final Evaluator evaluator = new Evaluator();
+    public static final Evaluator evaluator = new Evaluator();
 
-    public static boolean HadError = false;
-    public static boolean HadRuntimeError = false;
+    public static boolean hadError = false;
+    public static boolean hadRuntimeError = false;
 
     public static void main(String[] args) throws IOException {
         if (args.length > 1) {
@@ -27,21 +27,21 @@ public class Lox {
         }
     }
 
-    private static void runFile(String path) throws IOException {
+    public static void runFile(String path) throws IOException {
         byte[] bytes = Files.readAllBytes(Paths.get(path));
         run(new String(bytes, Charset.defaultCharset()));
 
         // Indicate an error in the exit code.
-        if (HadError) {
+        if (hadError) {
             System.exit(Main.EXIT_DATA_ERROR);
         }
 
-        if (HadRuntimeError) {
+        if (hadRuntimeError) {
             System.exit(Main.EXIT_SOFTWARE);
         }
     }
 
-    private static void runPrompt() throws IOException {
+    public static void runPrompt() throws IOException {
         InputStreamReader input = new InputStreamReader(System.in);
         BufferedReader reader = new BufferedReader(input);
 
@@ -52,58 +52,42 @@ public class Lox {
                 break;
             }
             run(line);
-            HadError = false;
+            hadError = false;
         }
     }
 
-    private static void run(String source) {
+    public static void run(String source) {
         Lexer lexer = new Lexer(source);
-        List<Token> tokens = lexer.ScanTokens();
-//@formatter:off Parsing Expressions
-//      // For now, just print the tokens.
-//      for (Token token : tokens) {
-//          System.out.println(token);
-//      }
-//@formatter:on
+        List<Token> tokens = lexer.scanTokens();
         Parser parser = new Parser(tokens);
-//@formatter:off Statements and State
-//      Expr expression = parser.parse();
-//@formatter:on
         List<Stmt> statements = parser.parse();
 
         // Stop if there was a syntax error.
-        if (HadError) {
+        if (hadError) {
             return;
         }
 
         Resolver resolver = new Resolver(evaluator);
-        resolver.Resolve(statements);
+        resolver.resolve(statements);
 
         // Stop if there was a resolution error.
-        if (HadError) {
+        if (hadError) {
             return;
         }
 
-//@formatter:off Evaluating Expressions
-//      System.out.println(new AstPrinter().print(expression));
-//@formatter:on
-
-//@formatter:off Statements and State
-//      evaluator.Evaluate(expression);
-//@formatter:on
-        evaluator.Evaluate(statements);
+        evaluator.evaluate(statements);
     }
 
-    public static void Error(int line, String message) {
+    public static void error(int line, String message) {
         report(line, "", message);
     }
 
-    private static void report(int line, String where, String message) {
+    public static void report(int line, String where, String message) {
         System.err.println("[line " + line + "] Error" + where + ": " + message);
-        HadError = true;
+        hadError = true;
     }
 
-    public static void Error(Token token, String message) {
+    public static void error(Token token, String message) {
         if (token.type() == TokenType.EOF) {
             report(token.line(), " at end", message);
         } else {
@@ -111,8 +95,8 @@ public class Lox {
         }
     }
 
-    public static void RuntimeError(RuntimeError error) {
+    public static void runtimeError(RuntimeError error) {
         System.err.println(error.getMessage() + "\n[line " + error.token.line() + "]");
-        HadRuntimeError = true;
+        hadRuntimeError = true;
     }
 }
